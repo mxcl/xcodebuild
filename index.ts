@@ -13,8 +13,9 @@ async function run() {
   args = args.concat(await getScheme())
   args = args.concat(other())
 
-  const { error } = spawnSync('xcodebuild', args, {stdio: 'inherit'})
+  const { error, status } = spawnSync('xcodebuild', args, {stdio: 'inherit'})
   if (error) throw error
+  if (status != 0) throw new Error('`xcodebuild` aborted')
 
   function figureOutAction() {
     return platform == 'watchOS' ? 'build' : (action || 'test')
