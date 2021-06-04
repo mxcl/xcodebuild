@@ -32,3 +32,4 @@ jobs:
     - uses: ./
       with:
         platform: ${{ matrix.platform }}
+        xcode: ${{ matrix.xcode }}

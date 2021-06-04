@@ -24,7 +24,7 @@ function spawn(arg0: string, args: string[]) {
 
 async function xcselect(constraint: string | undefined) {
   const rv = (await xcodes()).filter(([path, v]) =>
-    semver.satisfies(constraint, v)
+    constraint ? semver.satisfies(constraint, v) : true
   ).sort((a,b) =>
     semver.compare(a[1], b[1])
   ).pop()
