@@ -1,7 +1,36 @@
 import * as gha_exec from '@actions/exec'
+import { spawnSync } from 'child_process'
+const semver = require('semver')
 
-async function xcselect(version: string | undefined) {
-  return '12.4'
+async function xcodes() {
+  const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
+  const rv: [string, string][] = []
+  for (const path of paths) {
+    const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion'])
+    const vv = semver.coerce(v).version
+    rv.push([path, v])
+  }
+  return rv
+}
+
+function spawn(arg0: string, args: string[]) {
+  const { error, status } = spawnSync(arg0, args, {stdio: 'inherit'})
+  if (error) throw error
+  if (status != 0) throw new Error(`\`${arg0}\` aborted`)
+}
+
+async function xcselect(constraint: string | undefined) {
+  const rv = (await xcodes()).filter(([path, v]) =>
+    semver.satisfies(constraint, v)
+  ).sort((a,b) =>
+    semver.compare(a[1], b[1])
+  ).pop()
+
+  if (!rv) throw new Error(`Found no valid Xcodes for ${constraint}`)
+
+  spawn('sudo', ['xcode-select', '--switch', rv[0]])
+
+  return rv[1]
 }
 
 interface Devices {
@@ -66,5 +95,5 @@ async function exec(command: string, args: string[]): Promise<string> {
 }
 
 export {
-  exec, destinations, scheme, xcselect
+  exec, destinations, scheme, xcselect, spawn
 }

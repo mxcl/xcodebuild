@@ -1,6 +1,5 @@
-import { destinations, scheme, xcselect } from './lib'
+import { destinations, scheme, spawn, xcselect } from './lib'
 import * as core from '@actions/core'
-import { spawnSync } from 'child_process'
 import { existsSync } from 'fs'
 
 async function run() {
@@ -10,6 +9,8 @@ async function run() {
 
   const swiftPM = existsSync('Package.swift')
   const selected = await xcselect(xcode)
+
+  core.info(`Selected Xcode-${selected}`)
 
   let args = (await destination())
   args.push(figureOutAction())
@@ -60,12 +61,6 @@ async function run() {
         throw new Error(`Invalid platform: ${platform}`)
     }
   }
-}
-
-function spawn(arg0: string, args: string[]) {
-  const { error, status } = spawnSync(arg0, args, {stdio: 'inherit'})
-  if (error) throw error
-  if (status != 0) throw new Error(`\`${arg0}\` aborted`)
 }
 
 run().catch(core.setFailed)
