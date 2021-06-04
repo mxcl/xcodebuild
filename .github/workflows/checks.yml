@@ -1,0 +1,14 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: 37 11 * * *
+jobs:
+  checks:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: npm install
+    - run: npm test
