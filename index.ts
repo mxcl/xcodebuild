@@ -13,7 +13,8 @@ async function run() {
   args = args.concat(await getScheme())
   args = args.concat(other())
 
-  spawnSync('xcodebuild', args, {stdio: 'inherit'})
+  const { error } = spawnSync('xcodebuild', args, {stdio: 'inherit'})
+  if (error) throw error
 
   function figureOutAction() {
     return platform == 'watchOS' ? 'build' : (action || 'test')
