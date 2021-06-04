@@ -1,5 +1,9 @@
 import * as gha_exec from '@actions/exec'
 
+async function xcselect(version: string | undefined) {
+  return '12.4'
+}
+
 interface Devices {
   devices: {
     [key: string]: [{
@@ -62,5 +66,5 @@ async function exec(command: string, args: string[]): Promise<string> {
 }
 
 export {
-  exec, destinations, scheme
+  exec, destinations, scheme, xcselect
 }
