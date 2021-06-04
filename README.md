@@ -3,6 +3,10 @@ Make your software #continuously-resilient as well as continuously integrated.
 This action will continue to work forever, no more CI breakage because Xcode
 is updated.
 
+# Sponsor @mxcl
+
+I can only afford to maintain projects I need or that are sponsored. Thanks.
+
 # Usage
 
 ```
