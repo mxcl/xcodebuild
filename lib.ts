@@ -8,8 +8,10 @@ async function xcodes() {
   for (const path of paths) {
     if (!path.trim()) continue;
     const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
-    const vv = semver.coerce(v).version
-    rv.push([path, v])
+    const vv = semver.coerce(v)?.version
+    if (vv) {
+      rv.push([path, vv])
+    }
   }
   return rv
 }
