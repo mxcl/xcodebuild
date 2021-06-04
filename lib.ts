@@ -6,6 +6,7 @@ async function xcodes() {
   const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
   const rv: [string, string][] = []
   for (const path of paths) {
+    if (!path.trim()) continue;
     const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
     const vv = semver.coerce(v).version
     rv.push([path, v])
