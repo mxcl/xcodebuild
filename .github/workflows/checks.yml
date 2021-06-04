@@ -6,9 +6,16 @@ on:
   schedule:
     - cron: 37 11 * * *
 jobs:
-  checks:
+  tests:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
     - run: npm install
     - run: npm test
+
+  builds:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: swift package init
+    - uses: ./
