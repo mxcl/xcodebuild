@@ -18,7 +18,7 @@ type DestinationsResponse = {[key: string]: string}
 async function scheme(): Promise<string> {
   const out = await exec('xcodebuild', ['-list', '-json'])
   const json = JSON.parse(out)
-  const schemes = json?.workspace?.schemes as string[]
+  const schemes = (json?.workspace ?? json?.project)?.schemes as string[]
   if (!schemes || schemes.length == 0) throw new Error('Could not determine scheme')
   for (const scheme of schemes) {
     if (scheme.endsWith('-Package')) return scheme
