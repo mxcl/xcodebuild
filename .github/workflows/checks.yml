@@ -14,7 +14,7 @@ jobs:
     - run: npm test
 
   builds:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     strategy:
       matrix:
         platform:
@@ -22,6 +22,10 @@ jobs:
           - tvOS
           - watchOS
           - macOS
+        xcode:
+          - ^10
+          - ^11
+          - ^12
     steps:
     - uses: actions/checkout@v2
     - run: swift package init
