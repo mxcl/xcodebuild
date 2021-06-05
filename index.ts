@@ -28,11 +28,11 @@ async function run() {
   spawn('xcodebuild', args)
 
   async function generateIfNecessary() {
-    if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5')) {
+    if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
       // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
       // failing trying to build the test modules, so we generate a project
       await generate()
-    } else if (semver.lt(selected, '11.0')) {
+    } else if (semver.lt(selected, '11.0.0')) {
       await generate()
     }
 
@@ -42,7 +42,7 @@ async function run() {
   }
 
   function figureOutAction() {
-    if (semver.gt(selected, '12.5')) {
+    if (semver.gt(selected, '12.5.0')) {
       return action || 'test'
     } else if (platform == 'watchOS' && swiftPM) {
       return 'build'
