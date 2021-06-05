@@ -16,9 +16,9 @@ async function run() {
   const swiftPM = existsSync('Package.swift')
   const selected = await xcselect(xcode)
 
-  await generateIfNecessary()
-
   core.info(`Selected Xcode-${selected}`)
+
+  await generateIfNecessary()
 
   let args = (await destination())
   args.push(figureOutAction())
