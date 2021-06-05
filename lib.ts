@@ -1,5 +1,6 @@
 import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
+import * as core from '@actions/core'
 import semver from 'semver'
 import path from 'path'
 
@@ -121,7 +122,7 @@ async function exec(command: string, args: string[]): Promise<string> {
   await gha_exec.exec(command, args, { listeners: {
     stdout: data => out += data.toString(),
     stderr: data => process.stderr.write(data.toString())
-  }, silent: true})
+  }, silent: !core.isDebug()})
 
   return out
 }
