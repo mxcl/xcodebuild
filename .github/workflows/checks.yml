@@ -8,6 +8,14 @@ jobs:
     - run: npm install
     - run: npm test
 
+  defaults:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          working-directory: fixture
+
   verify:
     runs-on: macos-10.15
     strategy:
