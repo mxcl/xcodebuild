@@ -29,8 +29,8 @@ jobs:
           - ^12
     steps:
     - uses: actions/checkout@v2
-    - run: swift package init
     - uses: ./
       with:
         platform: ${{ matrix.platform }}
         xcode: ${{ matrix.xcode }}
+      working-directory: fixture
