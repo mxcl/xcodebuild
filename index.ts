@@ -1,6 +1,7 @@
 import { destinations, scheme, spawn, xcselect } from './lib'
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
+import * as semver from 'semver'
 
 async function run() {
   const cwd = core.getInput('working-directory')
@@ -15,6 +16,8 @@ async function run() {
   const swiftPM = existsSync('Package.swift')
   const selected = await xcselect(xcode)
 
+  await generateIfNecessary()
+
   core.info(`Selected Xcode-${selected}`)
 
   let args = (await destination())
@@ -24,17 +27,28 @@ async function run() {
 
   spawn('xcodebuild', args)
 
-  function figureOutAction() {
-    if (selected > '12.5') return 'test'
-    if (platform == 'watchOS') {
-      if (swiftPM) {
-        // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
-        // failing trying to build the test modules, so we generate a project
-        spawn('swift', ['package', 'generate-xcodeproj'])
-      }
-      return 'build'
+  async function generateIfNecessary() {
+    if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5')) {
+      // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
+      // failing trying to build the test modules, so we generate a project
+      await generate()
+    } else if (semver.lt(selected, '11.0')) {
+      await generate()
     }
-    return action || 'test'
+
+    async function generate() {
+      await spawn('swift', ['package', 'generate-xcodeproj'])
+    }
+  }
+
+  function figureOutAction() {
+    if (semver.gt(selected, '12.5')) {
+      return action || 'test'
+    } else if (platform == 'watchOS' && swiftPM) {
+      return 'build'
+    } else {
+      return action || 'test'
+    }
   }
 
   function other() {
