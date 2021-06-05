@@ -1,0 +1,13 @@
+on:
+  release:
+    types: published
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: echo "v=${v:0:1}" >> $GITHUB_ENV
+        env:
+          v: ${{ github.event.release.tag_name }}
+      - run: git tag --force v$v
+      - run: git push origin v$v --force
