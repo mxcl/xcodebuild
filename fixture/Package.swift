@@ -15,11 +15,9 @@ let pkg = Package(
     ]
 )
 
-#if swift(>=5.1)
 pkg.platforms = [
     .macOS(.v10_10),
     .iOS(.v9),
     .tvOS(.v9),
     .watchOS(.v3)
 ]
-#endif
