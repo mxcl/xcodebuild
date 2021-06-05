@@ -10,6 +10,6 @@ let package = Package(
         .executable(name: name, targets: [name]),
     ],
     targets: [
-        .target(name: name),
+        .target(name: name, path: ".", sources: ["main.swift"]),
     ]
 )
