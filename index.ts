@@ -1,22 +1,65 @@
-import { destinations, scheme } from './lib'
+import { destinations, scheme, spawn, xcselect } from './lib'
 import * as core from '@actions/core'
-import { spawnSync } from 'child_process'
 import { existsSync } from 'fs'
+import * as semver from 'semver'
 
 async function run() {
+  const cwd = core.getInput('working-directory')
+  if (cwd) {
+    process.chdir(cwd)
+  }
+
   const xcode = core.getInput('xcode')
   const platform = core.getInput('platform')
   const action = core.getInput('action')
+
+  const swiftPM = existsSync('Package.swift')
+  const selected = await xcselect(xcode)
+
+  core.info(`Selected Xcode ${selected}`)
+
+  await generateIfNecessary()
 
   let args = (await destination())
   args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
+  if (core.getInput('quiet')) args.push('-quiet')
 
-  spawnSync('xcodebuild', args, {stdio: 'inherit'})
+  try {
+    core.startGroup('`xcodebuild`')
+    spawn('xcodebuild', args)
+  } finally {
+    core.endGroup()
+  }
+
+  async function generateIfNecessary() {
+    if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
+      // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
+      // failing trying to build the test modules, so we generate a project
+      await generate()
+    } else if (semver.lt(selected, '11.0.0')) {
+      await generate()
+    }
+
+    async function generate() {
+      try {
+        core.startGroup('Generating `.xcodeproj`')
+        await spawn('swift', ['package', 'generate-xcodeproj'])
+      } finally {
+        core.endGroup()
+      }
+    }
+  }
 
   function figureOutAction() {
-    return platform == 'watchOS' ? 'build' : (action || 'test')
+    if (semver.gt(selected, '12.5.0')) {
+      return action || 'test'
+    } else if (platform == 'watchOS' && swiftPM) {
+      return 'build'
+    } else {
+      return action || 'test'
+    }
   }
 
   function other() {
@@ -28,7 +71,7 @@ async function run() {
   }
 
   async function getScheme() {
-    if (existsSync('Package.swift')) {
+    if (swiftPM) {
       return ['-scheme', await scheme()]
     } else {
       return []

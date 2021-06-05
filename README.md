@@ -3,6 +3,10 @@ Make your software #continuously-resilient as well as continuously integrated.
 This action will continue to work forever, no more CI breakage because Xcode
 is updated.
 
+# Sponsor @mxcl
+
+I can only afford to maintain projects I need or that are sponsored. Thanks.
+
 # Usage
 
 ```
@@ -55,8 +59,8 @@ jobs:
 
 # Neat Stuff
 
-* We know watchOS cannot be tested prior to 12.5 and run xcodebuild with `build`
-instead
+* We’re smart based on the selected Xcode version, for example we know watchOS
+cannot be tested prior to 12.5 and run xcodebuild with `build` instead
 * We figure out the newest simulator to use for you so you don’t have to be a
 wizard and your CI will stop breaking every few months
 * You probably don’t need to specify project or scheme since we aren’t tedious
