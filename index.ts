@@ -24,6 +24,7 @@ async function run() {
   args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
+  if (core.getInput('quiet')) args.push('-quiet')
 
   try {
     core.startGroup('`xcodebuild`')

@@ -1,25 +1,29 @@
-name: 'mxcl/Xcodebuild'
-author: 'Max Howell'
-description: 'A continuously resilient `xcodebuild` action'
+name: mxcl/Xcodebuild
+author: Max Howell
+description: A continuously resilient `xcodebuild` action
 inputs:
   xcode:
-    description: 'A semantic-version, eg. ^10, ~10.3 or 10.3.1'
+    description: A semantic-version, eg. ^10, ~10.3 or 10.3.1
     required: false
   platform:
-    description: 'Either `iOS`, `tvOS`, `macOS` or `watchOS`'
+    description: Either `iOS`, `tvOS`, `macOS` or `watchOS`
     required: false
     default: macOS
   action:
-    description: 'Either `test` or `build`'
+    description: Either `test` or `build`
     required: false
     default: test
   code-coverage:
-    description: 'Enables code coverage'
+    description: Enables code coverage
     required: false
     default: false
   working-directory:
     description: '…'
     required: false
+  quiet:
+    description: Only output errors
+    required: false
+    default: true
 runs:
   using: 'node12'
   main: 'dist/index.js'
