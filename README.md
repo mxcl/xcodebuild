@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - use: mxcl/xcodebuild
+      - use: mxcl/xcodebuild@v1
       # ^^ this is the simplest use, runs tests for macOS
 ```
 
@@ -30,7 +30,7 @@ jobs:
           - tvOS
           - iOS
     steps:
-      - use: mxcl/xcodebuild
+      - use: mxcl/xcodebuild@v1
         with:
           platform: ${{ matrix.platform }}
 ```
@@ -50,7 +50,7 @@ jobs:
           - iOS
     runs-on: ${{ matrix.os }}
     steps:
-      - use: mxcl/xcodebuild
+      - use: mxcl/xcodebuild@v1
         with:
           platform: ${{ matrix.platform }}
           action: build        # `test` is the default
@@ -65,3 +65,10 @@ cannot be tested prior to 12.5 and run xcodebuild with `build` instead
 wizard and your CI will stop breaking every few months
 * You probably don’t need to specify project or scheme since we aren’t tedious
 if possible
+
+# Continuous Resilience
+
+* Use `macos-latest` and trust this action to always work
+  * This because GitHub deprecate old environments, so if you want your CI to continue to work in 5 years you need to use `latest`
+* Set up a scheduled job for your CI for at least once a week
+  * This way you’ll be notified if a new version of something (like Xcode) causes breakage in your builds
