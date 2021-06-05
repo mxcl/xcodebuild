@@ -1,6 +1,6 @@
 import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
-const semver = require('semver')
+import semver from 'semver'
 
 async function xcodes() {
   const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
