@@ -25,7 +25,12 @@ async function run() {
   args = args.concat(await getScheme())
   args = args.concat(other())
 
-  spawn('xcodebuild', args)
+  try {
+    core.startGroup('`xcodebuild`')
+    spawn('xcodebuild', args)
+  } finally {
+    core.endGroup()
+  }
 
   async function generateIfNecessary() {
     if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
@@ -37,7 +42,12 @@ async function run() {
     }
 
     async function generate() {
-      await spawn('swift', ['package', 'generate-xcodeproj'])
+      try {
+        core.startGroup('Generating `.xcodeproj`')
+        await spawn('swift', ['package', 'generate-xcodeproj'])
+      } finally {
+        core.endGroup()
+      }
     }
   }
 
