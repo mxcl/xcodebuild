@@ -7,10 +7,10 @@ let name = "my-fixture"
 let pkg = Package(
     name: name,
     products: [
-        .executable(name: name, targets: [name]),
+        .library(name: name, targets: [name]),
     ],
     targets: [
-        .target(name: name, path: ".", sources: ["main.swift"]),
+        .target(name: name, path: ".", sources: ["code.swift"]),
         .testTarget(name: "\(name)Tests", path: ".", sources: ["test.swift"]),
     ]
 )

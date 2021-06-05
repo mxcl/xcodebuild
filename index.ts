@@ -16,7 +16,7 @@ async function run() {
   const swiftPM = existsSync('Package.swift')
   const selected = await xcselect(xcode)
 
-  core.info(`Selected Xcode-${selected}`)
+  core.info(`Selected Xcode ${selected}`)
 
   await generateIfNecessary()
 
