@@ -17,7 +17,7 @@ async function run() {
 
   core.info(`Selected Xcode ${selected}`)
 
-  await generateIfNecessary()
+  generateIfNecessary()
 
   let args = (await destination())
   args.push(figureOutAction())
@@ -32,19 +32,19 @@ async function run() {
     core.endGroup()
   }
 
-  async function generateIfNecessary() {
+  function generateIfNecessary() {
     if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
       // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
       // failing trying to build the test modules, so we generate a project
-      await generate()
+      generate()
     } else if (semver.lt(selected, '11.0.0')) {
-      await generate()
+      generate()
     }
 
-    async function generate() {
+    function generate() {
       try {
         core.startGroup('Generating `.xcodeproj`')
-        await spawn('swift', ['package', 'generate-xcodeproj'])
+        spawn('swift', ['package', 'generate-xcodeproj'])
       } finally {
         core.endGroup()
       }
