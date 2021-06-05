@@ -11,5 +11,6 @@ let package = Package(
     ],
     targets: [
         .target(name: name, path: ".", sources: ["main.swift"]),
+        .testTarget(name: "\(name)Tests", path: ".", sources: ["test.swift"]),
     ]
 )
