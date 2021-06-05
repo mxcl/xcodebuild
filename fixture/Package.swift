@@ -4,7 +4,7 @@ import PackageDescription
 
 let name = "my-fixture"
 
-let package = Package(
+let pkg = Package(
     name: name,
     products: [
         .executable(name: name, targets: [name]),
@@ -14,3 +14,12 @@ let package = Package(
         .testTarget(name: "\(name)Tests", path: ".", sources: ["test.swift"]),
     ]
 )
+
+#if swift(>=5.1)
+pkg.platforms = [
+    .macOS(.v10_10),
+    .iOS(.v9),
+    .tvOS(.v9),
+    .watchOS(.v3)
+]
+#endif
