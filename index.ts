@@ -23,7 +23,7 @@ async function run() {
   args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
-  if (core.getInput('quiet')) args.push('-quiet')
+  if (core.getBooleanInput('quiet')) args.push('-quiet')
 
   try {
     core.startGroup('`xcodebuild`')
@@ -64,7 +64,7 @@ async function run() {
   }
 
   function other() {
-    if ((core.getInput('code-coverage') || false) && action == 'test') {
+    if (core.getBooleanInput('code-coverage') && action == 'test') {
       return ['-enableCodeCoverage', 'YES']
     } else {
       return []
