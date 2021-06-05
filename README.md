@@ -39,19 +39,24 @@ jobs:
 jobs:
   build:
     strategy:
-      os:
-        - macos-11
-        - macos-10.15
       matrix:
+        os:
+          - macos-11
+          - macos-10.15
         platform:
           - macOS
           - watchOS
           - tvOS
           - iOS
+        xcode:
+          - ^10
+          - ^11
+          - ^12
     runs-on: ${{ matrix.os }}
     steps:
       - use: mxcl/xcodebuild@v1
         with:
+          xcode: ${{ matrix.xcode }}
           platform: ${{ matrix.platform }}
           action: build        # `test` is the default
           code-coverage: true  # `false` is the default
@@ -72,3 +77,10 @@ if possible
   * This because GitHub deprecate old environments, so if you want your CI to continue to work in 5 years you need to use `latest`
 * Set up a scheduled job for your CI for at least once a week
   * This way you’ll be notified if a new version of something (like Xcode) causes breakage in your builds
+
+# Contributing
+
+1. Edit the various `.ts` files
+2. Run `npm run prepare`
+3. Test with `npm test`
+4. Make a “Pull Request”

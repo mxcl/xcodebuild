@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "tsc",
-    "prepare": "ncc build index.ts --minify",
+    "prepare": "ncc build index.ts --minify --source-map",
     "test": "intern suites=*.test.ts"
   },
   "dependencies": {
