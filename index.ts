@@ -55,7 +55,7 @@ async function run() {
     const action = core.getInput('action') || 'test'
     if (semver.gt(selected, '12.5.0')) {
       return action
-    } else if (platform == 'watchOS' && swiftPM) {
+    } else if (platform == 'watchOS' && action == 'test' && swiftPM) {
       core.warning("Cannot test Apple Watch with Xcode < 12.5")
       return 'build'
     } else {
