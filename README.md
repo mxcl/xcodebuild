@@ -80,7 +80,8 @@ if possible
 
 # Contributing
 
+1. Run `npm install`
 1. Edit the various `.ts` files
-2. Run `npm run prepare`
-3. Test with `npm test`
-4. Make a “Pull Request”
+1. Run `npm run prepare`
+1. Test with `npm test`
+1. Make a “Pull Request”
