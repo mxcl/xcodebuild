@@ -17,13 +17,13 @@ async function run() {
 
   core.info(`Selected Xcode ${selected}`)
 
-  await generateIfNecessary()
+  generateIfNecessary()
 
   let args = (await destination())
   args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
-  if (core.getInput('quiet')) args.push('-quiet')
+  if (core.getBooleanInput('quiet')) args.push('-quiet')
 
   try {
     core.startGroup('`xcodebuild`')
@@ -32,19 +32,19 @@ async function run() {
     core.endGroup()
   }
 
-  async function generateIfNecessary() {
+  function generateIfNecessary() {
     if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
       // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
       // failing trying to build the test modules, so we generate a project
-      await generate()
+      generate()
     } else if (semver.lt(selected, '11.0.0')) {
-      await generate()
+      generate()
     }
 
-    async function generate() {
+    function generate() {
       try {
         core.startGroup('Generating `.xcodeproj`')
-        await spawn('swift', ['package', 'generate-xcodeproj'])
+        spawn('swift', ['package', 'generate-xcodeproj'])
       } finally {
         core.endGroup()
       }
@@ -55,7 +55,7 @@ async function run() {
     const action = core.getInput('action') || 'test'
     if (semver.gt(selected, '12.5.0')) {
       return action
-    } else if (platform == 'watchOS' && swiftPM) {
+    } else if (platform == 'watchOS' && action == 'test' && swiftPM) {
       core.warning("Cannot test Apple Watch with Xcode < 12.5")
       return 'build'
     } else {
@@ -64,7 +64,7 @@ async function run() {
   }
 
   function other() {
-    if ((core.getInput('code-coverage') || false) && action == 'test') {
+    if (core.getBooleanInput('code-coverage') && action == 'test') {
       return ['-enableCodeCoverage', 'YES']
     } else {
       return []
