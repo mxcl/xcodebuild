@@ -10,9 +10,8 @@ async function run() {
   }
 
   const swiftPM = existsSync('Package.swift')
-  const xcode = core.getInput('xcode')
   const platform = core.getInput('platform')
-  const selected = await xcselect(xcode)
+  const selected = await xcselect(core.getInput('xcode'), core.getInput('swift'))
   const action = figureOutAction()
 
   core.info(`Selected Xcode ${selected}`)

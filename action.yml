@@ -5,6 +5,9 @@ inputs:
   xcode:
     description: A semantic-version, eg. ^10, ~10.3 or 10.3.1
     required: false
+  swift:
+    description: A semantic-version, eg. ^5, ~5.4 or 5.4.1
+    required: false
   platform:
     description: Either `iOS`, `tvOS`, `macOS` or `watchOS`
     required: false

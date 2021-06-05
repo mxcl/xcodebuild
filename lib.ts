@@ -1,6 +1,7 @@
 import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
 import semver from 'semver'
+import path from 'path'
 
 async function xcodes() {
   const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
@@ -22,18 +23,46 @@ function spawn(arg0: string, args: string[]) {
   if (status != 0) throw new Error(`\`${arg0}\` aborted`)
 }
 
-async function xcselect(constraint: string | undefined) {
-  const rv = (await xcodes()).filter(([path, v]) =>
-    constraint ? semver.satisfies(v, constraint) : true
-  ).sort((a,b) =>
-    semver.compare(a[1], b[1])
-  ).pop()
+async function xcselect(xcode: string | undefined, swift: string | undefined): Promise<string> {
 
-  if (!rv) throw new Error(`Found no valid Xcodes for ${constraint}`)
+  if (swift) {
+    return await selectSwift(swift)
+  } else if (xcode) {
+    return await selectXcode(xcode)
+  } else {
 
-  spawn('sudo', ['xcode-select', '--switch', rv[0]])
+    // figure out the GHA image default Xcode’s version
 
-  return rv[1]
+    const devdir = await exec('xcode-select', ['--print-path'])
+    const xcodePath = path.dirname(path.dirname(devdir))
+    const rawVersion = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', xcodePath])
+    const version = semver.coerce(rawVersion)?.version
+    if (version) {
+      return version
+    } else {
+      // shouldn’t happen, but this action needs to know the Xcode version
+      // or we cannot function, this way we are #continuously-resilient
+      return selectXcode()
+    }
+  }
+
+  async function selectXcode(constraint?: string) {
+    const rv = (await xcodes()).filter(([path, v]) =>
+      constraint ? semver.satisfies(v, constraint) : true
+    ).sort((a,b) =>
+      semver.compare(a[1], b[1])
+    ).pop()
+
+    if (!rv) throw new Error(`Found no valid Xcodes for ${constraint}`)
+
+    spawn('sudo', ['xcode-select', '--switch', rv[0]])
+
+    return rv[1]
+  }
+
+  async function selectSwift(constraint: string): Promise<string> {
+    throw new Error('Unsupported currently')
+  }
 }
 
 interface Devices {
