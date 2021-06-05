@@ -33,4 +33,4 @@ jobs:
       with:
         platform: ${{ matrix.platform }}
         xcode: ${{ matrix.xcode }}
-      working-directory: fixture
+        working-directory: fixture

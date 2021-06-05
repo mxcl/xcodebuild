@@ -3,6 +3,11 @@ import * as core from '@actions/core'
 import { existsSync } from 'fs'
 
 async function run() {
+  const cwd = core.getInput('working-directory')
+  if (cwd) {
+    process.chdir(cwd)
+  }
+
   const xcode = core.getInput('xcode')
   const platform = core.getInput('platform')
   const action = core.getInput('action')

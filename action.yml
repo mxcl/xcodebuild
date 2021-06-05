@@ -17,6 +17,9 @@ inputs:
     description: 'Enables code coverage'
     required: false
     default: false
+  working-directory:
+    description: '…'
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
