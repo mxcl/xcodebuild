@@ -51,7 +51,7 @@ jobs:
           - tvOS
           - iOS
         xcode:
-          - ^10
+          - ^10  # a semantically versioned constraint †
           - ^11
           - ^12
     runs-on: ${{ matrix.os }}
@@ -64,6 +64,8 @@ jobs:
           code-coverage: true  # `false` is the default
 ```
 
+> † check out https://devhints.io/semver for valid constraints
+
 ## Neat Stuff
 
 * We’re smart based on the selected Xcode version, for example we know watchOS
@@ -72,11 +74,16 @@ cannot be tested prior to 12.5 and run xcodebuild with `build` instead
 wizard and your CI will stop breaking every few months
 * You probably don’t need to specify project or scheme since we aren’t tedious
 if possible
+* As you probably already figured out, we determine the simulator destination
+for you automatically. No more specifying fragile strings like
+`platform=iphonesimulator,os=14.5,name=iPhone 12` that will break when Xcode
+updates next week.
 
 ## Continuous Resilience
 
 * Use `macos-latest` and trust this action to always work
   * This because GitHub deprecate old environments, so if you want your CI to continue to work in 5 years you need to use `latest`
+  * This makes specifying specific xcode versions problematic however, we haven’t got a good story for this yet.
 * Set up a scheduled job for your CI for at least once a week
   * This way you’ll be notified if a new version of something (like Xcode) causes breakage in your builds
 
