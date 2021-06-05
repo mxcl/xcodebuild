@@ -1,10 +1,5 @@
 on:
-  push:
-    branches:
-      - master
   pull_request:
-  schedule:
-    - cron: 37 11 * * *
 jobs:
   tests:
     runs-on: macos-latest
