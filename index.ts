@@ -9,12 +9,11 @@ async function run() {
     process.chdir(cwd)
   }
 
+  const swiftPM = existsSync('Package.swift')
   const xcode = core.getInput('xcode')
   const platform = core.getInput('platform')
-  const action = core.getInput('action')
-
-  const swiftPM = existsSync('Package.swift')
   const selected = await xcselect(xcode)
+  const action = figureOutAction()
 
   core.info(`Selected Xcode ${selected}`)
 
@@ -53,18 +52,20 @@ async function run() {
   }
 
   function figureOutAction() {
+    const action = core.getInput('action') || 'test'
     if (semver.gt(selected, '12.5.0')) {
-      return action || 'test'
+      return action
     } else if (platform == 'watchOS' && swiftPM) {
+      core.warning("Cannot test Apple Watch with Xcode < 12.5")
       return 'build'
     } else {
-      return action || 'test'
+      return action
     }
   }
 
   function other() {
-    if (core.getInput('code-coverage') || false) {
-      return ['ENABLE_CODE_COVERAGE=YES']
+    if ((core.getInput('code-coverage') || false) && action == 'test') {
+      return ['-enableCodeCoverage', 'YES']
     } else {
       return []
     }
@@ -93,4 +94,9 @@ async function run() {
   }
 }
 
-run().catch(core.setFailed)
+run().catch(e => {
+  core.setFailed(e)
+  if (e instanceof SyntaxError && e.stack) {
+    core.debug(e.stack)
+  }
+})
