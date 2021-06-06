@@ -1,5 +1,7 @@
-on:
-  pull_request:
+on: pull_request
+concurrency:
+  group: ${{ github.head_ref }}
+  cancel-in-progress: true
 jobs:
   tests:
     runs-on: macos-latest
@@ -14,18 +16,51 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./
         with:
-          working-directory: fixture
+          working-directory: fixture/debug
+
+  configurations:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        configuration:
+          - debug
+          - release
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          configuration: ${{ matrix.configuration }}
+          working-directory: fixture/${{ matrix.configuration }}
 
   verify:
     runs-on: macos-10.15
     strategy:
-      fail-fast: false
       matrix:
         platform:
           - iOS
           - tvOS
-          - watchOS
           - macOS
+        xcode:
+          - ^10
+          - ^11
+          - ^12
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./
+      with:
+        platform: ${{ matrix.platform }}
+        xcode: ${{ matrix.xcode }}
+        working-directory: fixture/${{ matrix.platform }}
+
+  # watchOS has more complexity, so we need a larger matrix to ensure
+  # we are covering all our code paths
+  verify-watchos:
+    name: verify (${{ matrix.platform }}, ${{ matrix.xcode }}, ${{ matrix.action }}${{ matrix.codecov && ', codecov' || ''}})
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        platform:
+          - watchOS
         xcode:
           - ^10
           - ^11
@@ -42,6 +77,6 @@ jobs:
       with:
         platform: ${{ matrix.platform }}
         xcode: ${{ matrix.xcode }}
-        working-directory: fixture
+        working-directory: fixture/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}

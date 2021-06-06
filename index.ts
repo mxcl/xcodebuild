@@ -1,4 +1,4 @@
-import { destinations, scheme, spawn, xcselect } from './lib'
+import { destinations, quiet, scheme, spawn, xcselect } from './lib'
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
@@ -13,6 +13,7 @@ async function run() {
   const platform = core.getInput('platform')
   const selected = await xcselect(core.getInput('xcode'), core.getInput('swift'))
   const action = figureOutAction()
+  const configuration = getConfiguration()
 
   core.info(`Selected Xcode ${selected}`)
 
@@ -22,7 +23,8 @@ async function run() {
   args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
-  if (core.getBooleanInput('quiet')) args.push('-quiet')
+  if (quiet()) args.push('-quiet')
+  if (configuration) args = args.concat(['-configuration', configuration])
 
   try {
     core.startGroup('`xcodebuild`')
@@ -89,6 +91,19 @@ async function run() {
         return []
       default:
         throw new Error(`Invalid platform: ${platform}`)
+    }
+  }
+
+  function getConfiguration() {
+    const conf = core.getInput('configuration')
+    switch (conf) {
+      // both `.xcodeproj` and SwiftPM projects capitalize these
+      // by default, and are case-sensitive. And for both if an
+      // incorrect configuration is specified do not error, but
+      // do not behave as expected instead.
+      case 'debug': return 'Debug'
+      case 'release': return 'Release'
+      default: return conf
     }
   }
 }
