@@ -14,20 +14,33 @@ async function run() {
   const selected = await xcselect(core.getInput('xcode'), core.getInput('swift'))
   const action = figureOutAction()
   const configuration = getConfiguration()
+  const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
 
   core.info(`Selected Xcode ${selected}`)
 
   generateIfNecessary()
 
   let args = (await destination())
-  args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
   if (quiet()) args.push('-quiet')
   if (configuration) args = args.concat(['-configuration', configuration])
 
   try {
+    const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
+
     core.startGroup('`xcodebuild`')
+
+    if (action == 'test' && warningsAsErrors) {
+      //TODO we also need to set the right flags for other languages
+      spawn('xcodebuild', args.concat([warningsAsErrorsFlags, 'build']))
+      spawn('xcodebuild', args.concat(['test']))
+    } else {
+      if (warningsAsErrors) args.push(warningsAsErrorsFlags)
+      args.push(action)
+      spawn('xcodebuild', args)
+    }
+
     spawn('xcodebuild', args)
   } finally {
     core.endGroup()
@@ -53,7 +66,7 @@ async function run() {
   }
 
   function figureOutAction() {
-    const action = core.getInput('action') || 'test'
+    const action = getInput()
     if (semver.gt(selected, '12.5.0')) {
       return action
     } else if (platform == 'watchOS' && action == 'test' && swiftPM) {
@@ -61,6 +74,17 @@ async function run() {
       return 'build'
     } else {
       return action
+    }
+    function getInput(): 'test' | 'build' {
+      const action = core.getInput('action').trim() || 'test'
+      switch (action) {
+      case 'build':
+      case 'test':
+        return action
+      default:
+        core.warning(`Invalid action: ${action}, setting \`test\``)
+        return 'test'
+      }
     }
   }
 
