@@ -29,6 +29,10 @@ inputs:
   configuration:
     description: Typically `Release` or `Debug`, leave unset for the Xcode default.
     required: false
+  warnings-as-errors:
+    description: Fails the build if any warnings in *non test targets*
+    required: false
+    default: false
 runs:
   using: 'node12'
   main: 'dist/index.js'

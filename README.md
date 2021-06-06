@@ -60,8 +60,10 @@ jobs:
         with:
           xcode: ${{ matrix.xcode }}
           platform: ${{ matrix.platform }}
-          action: build        # `test` is the default
-          code-coverage: true  # `false` is the default
+          action: build             # default = `test`
+          code-coverage: true       # default = `false`
+          warnings-as-errors: true  # default = `false`
+          configuration: release    # no default, ie. `xcodebuild` decides itself
 ```
 
 > † check out https://devhints.io/semver for valid constraints
