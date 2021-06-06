@@ -3,17 +3,22 @@ author: Max Howell
 description: A continuously resilient `xcodebuild` action
 inputs:
   xcode:
-    description: A semantic-version, eg. ^10, ~10.3 or 10.3.1
+    description: |
+      A semantic-version, eg. ^10, ~10.3 or 10.3.1
+      Leave unset for the image‑default.
     required: false
   swift:
     description: A semantic-version, eg. ^5, ~5.4 or 5.4.1
     required: false
   platform:
-    description: Either `iOS`, `tvOS`, `macOS` or `watchOS`
+    description: |
+      Either `iOS`, `tvOS`, `macOS` or `watchOS`
+      Leave unset and `xcodebuild` decides itself.
     required: false
-    default: macOS
   action:
-    description: Either `test` or `build`
+    description: |
+      The most common actions are `test`, `build`.
+      See the `xcodebuild` manual for available actions.
     required: false
     default: test
   code-coverage:
@@ -27,10 +32,12 @@ inputs:
     description: Only output errors
     required: false
   configuration:
-    description: Typically `Release` or `Debug`, leave unset for the Xcode default.
+    description: |
+      Typically `Release` or `Debug`.
+      Leave unset and `xcodebuild` decides itself.
     required: false
   warnings-as-errors:
-    description: Fails the build if any warnings in *non test targets*
+    description: Fails the build if any warnings in *non test targets*.
     required: false
     default: false
 runs:
