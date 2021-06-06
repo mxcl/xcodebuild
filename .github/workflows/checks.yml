@@ -39,8 +39,28 @@ jobs:
         platform:
           - iOS
           - tvOS
-          - watchOS
           - macOS
+        xcode:
+          - ^10
+          - ^11
+          - ^12
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./
+      with:
+        platform: ${{ matrix.platform }}
+        xcode: ${{ matrix.xcode }}
+        working-directory: fixture/${{ matrix.platform }}
+
+  # watchOS has more complexity, so we need a larger matrix to ensure
+  # we are covering all our code paths
+  verify-watchos:
+    name: verify (${{ matrix.platform }}, ${{ matrix.xcode }}, ${{ matrix.action }}${{ matrix.codecov && ', codecov' || ''}})
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        platform:
+          - watchOS
         xcode:
           - ^10
           - ^11
