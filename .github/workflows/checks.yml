@@ -35,6 +35,7 @@ jobs:
           action: test
 
   verify:
+    name: xcodebuild test on:${{ matrix.platform }} ~> ${{ matrix.xcode }}
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -57,7 +58,7 @@ jobs:
   # watchOS has more complexity, so we need a larger matrix to ensure
   # we are covering all our code paths
   verify-watchos:
-    name: verify (${{ matrix.platform }}, ${{ matrix.xcode }}, ${{ matrix.action }}${{ matrix.codecov && ', codecov' || ''}})
+    name: xcodebuild ${{ matrix.action }} ${{ matrix.codecov && '+codecov' || ''}} on:${{ matrix.platform }} ~> ${{ matrix.xcode }}
     runs-on: macos-10.15
     strategy:
       matrix:

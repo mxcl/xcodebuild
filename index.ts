@@ -31,10 +31,10 @@ async function run() {
 
     core.startGroup('`xcodebuild`')
 
-    if (action == 'test' && warningsAsErrors) {
+    if (warningsAsErrors && (action == 'test' || action == 'build-for-testing')) {
       //TODO we also need to set the right flags for other languages
       spawn('xcodebuild', args.concat([warningsAsErrorsFlags, 'build']))
-      spawn('xcodebuild', args.concat(['test']))
+      spawn('xcodebuild', args.concat([action]))
     } else {
       if (warningsAsErrors) args.push(warningsAsErrorsFlags)
       args.push(action)
@@ -66,30 +66,19 @@ async function run() {
   }
 
   function figureOutAction() {
-    const action = getInput()
+    const action = core.getInput('action').trim() || 'test'
     if (semver.gt(selected, '12.5.0')) {
       return action
-    } else if (platform == 'watchOS' && action == 'test' && swiftPM) {
+    } else if (platform == 'watchOS' && (action == 'test' || action == 'build-for-testing')) {
       core.warning("Setting `action=build` for Apple Watch / Xcode <12.5")
       return 'build'
     } else {
       return action
     }
-    function getInput(): 'test' | 'build' {
-      const action = core.getInput('action').trim() || 'test'
-      switch (action) {
-      case 'build':
-      case 'test':
-        return action
-      default:
-        core.warning(`Invalid action: ${action}, setting \`test\``)
-        return 'test'
-      }
-    }
   }
 
   function other() {
-    if (core.getBooleanInput('code-coverage') && action == 'test') {
+    if (core.getBooleanInput('code-coverage') && (action == 'test' || action == 'build-for-testing')) {
       return ['-enableCodeCoverage', 'YES']
     } else {
       return []
@@ -105,13 +94,14 @@ async function run() {
   }
 
   async function destination() {
-    switch (platform) {
+    switch (platform.trim()) {
       case 'iOS':
       case 'tvOS':
       case 'watchOS':
         const id = (await destinations())[platform]
         return ['-destination', `id=${id}`]
       case 'macOS':
+      case '':
         return []
       default:
         throw new Error(`Invalid platform: ${platform}`)
