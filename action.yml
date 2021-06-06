@@ -27,6 +27,9 @@ inputs:
     description: Only output errors
     required: false
     default: true
+  configuration:
+    description: Typically `Release` or `Debug`, leave unset for the Xcode default.
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
