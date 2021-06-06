@@ -26,7 +26,6 @@ inputs:
   quiet:
     description: Only output errors
     required: false
-    default: true
   configuration:
     description: Typically `Release` or `Debug`, leave unset for the Xcode default.
     required: false

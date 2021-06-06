@@ -1,4 +1,4 @@
-import { destinations, scheme, spawn, xcselect } from './lib'
+import { destinations, quiet, scheme, spawn, xcselect } from './lib'
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
@@ -23,7 +23,7 @@ async function run() {
   args.push(figureOutAction())
   args = args.concat(await getScheme())
   args = args.concat(other())
-  if (core.getBooleanInput('quiet')) args.push('-quiet')
+  if (quiet()) args.push('-quiet')
   if (configuration) args = args.concat(['-configuration', configuration])
 
   try {

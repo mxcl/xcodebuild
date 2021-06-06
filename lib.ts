@@ -2,6 +2,7 @@ import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
 import semver from 'semver'
 import path from 'path'
+import * as core from '@actions/core'
 
 async function xcodes() {
   const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
@@ -121,11 +122,20 @@ async function exec(command: string, args: string[]): Promise<string> {
   await gha_exec.exec(command, args, { listeners: {
     stdout: data => out += data.toString(),
     stderr: data => process.stderr.write(data.toString())
-  }, silent: true})
+  }, silent: quiet()})
 
   return out
 }
 
+function quiet() {
+  const rawInput = core.getInput('quiet').trim()
+  if (rawInput === '') {
+    return !core.isDebug()  // default is quiet unless debug is enabled for the workflow
+  } else {
+    return core.getBooleanInput('quiet')
+  }
+}
+
 export {
-  exec, destinations, scheme, xcselect, spawn
+  exec, destinations, scheme, xcselect, spawn, quiet
 }
