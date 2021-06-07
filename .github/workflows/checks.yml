@@ -1,4 +1,9 @@
-on: pull_request
+on:
+  pull_request:
+    paths:
+      - '*.ts'
+      - .github/workflows/checks.yml
+      - dist/*
 concurrency:
   group: ${{ github.head_ref }}
   cancel-in-progress: true
@@ -34,7 +39,26 @@ jobs:
           warnings-as-errors: true
           action: test
 
-  verify:
+  swift:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        swift:
+          - ~5.0
+          - ~5.1
+          - ~5.2
+          - ~5.3
+          - ~5.4
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./
+      with:
+        swift: ${{ matrix.swift }}
+        working-directory: fixture/swift/${{ matrix.swift }}
+        action: build
+      continue-on-error: ${{ matrix.swift == '~5.4' }}
+
+  xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
     runs-on: macos-10.15
     strategy:
@@ -64,7 +88,7 @@ jobs:
         action: ${{ matrix.action }}
         errors-as-warnings: ${{ matrix.errors-as-warnings }}
 
-  verify2:
+  more-xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
     runs-on: macos-10.15
     strategy:

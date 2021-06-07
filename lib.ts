@@ -54,7 +54,7 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
       semver.compare(a[1], b[1])
     ).pop()
 
-    if (!rv) throw new Error(`Found no valid Xcodes for ${constraint}`)
+    if (!rv) throw new Error(`No Xcode ~> ${constraint}`)
 
     spawn('sudo', ['xcode-select', '--switch', rv[0]])
 
@@ -62,7 +62,27 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
   }
 
   async function selectSwift(constraint: string): Promise<string> {
-    throw new Error('Unsupported currently')
+    const rv1 = await xcodes()
+    const rv2 = await Promise.all(rv1.map(swiftVersion))
+    const rv3 = rv2
+      .filter(([,,sv]) => semver.satisfies(sv, constraint))
+      .sort((a,b) => semver.compare(a[1], b[1]))
+      .pop()
+
+    if (!rv3) throw new Error(`No Xcode with Swift ~> ${constraint}`)
+
+    core.info(`Swift: ${rv3[2]}`)
+
+    spawn('sudo', ['xcode-select', '--switch', rv3[0]])
+
+    return rv3[1]
+
+    async function swiftVersion([DEVELOPER_DIR, xcodeVersion]: [string, string]): Promise<[string, string, string]> {
+      const stdout = await exec('swift', ['--version'], {DEVELOPER_DIR})
+      const matches = stdout.match(/Swift version (.+?)\s/m)
+      if (!matches || !matches[1]) throw new Error(`failed to extract swift version: ${xcode}`)
+      return [DEVELOPER_DIR, xcodeVersion, matches[1]]
+    }
   }
 }
 
@@ -132,13 +152,13 @@ async function destinations(): Promise<DestinationsResponse> {
   }
 }
 
-async function exec(command: string, args: string[]): Promise<string> {
+async function exec(command: string, args: string[], env?: {[key: string]: string}): Promise<string> {
   let out = ''
   try {
     await gha_exec.exec(command, args, { listeners: {
       stdout: data => out += data.toString(),
       stderr: data => process.stderr.write(data.toString())
-    }, silent: quiet()})
+    }, silent: quiet(), env})
 
     return out
   } catch (error) {
