@@ -54,7 +54,8 @@ jobs:
     - uses: ./
       with:
         swift: ${{ matrix.swift }}
-        working-directory: fixture/macOS
+        working-directory: fixture/swift/${{ matrix.swift }}
+        action: build
       continue-on-error: ${{ matrix.swift == '~5.4' }}
 
   xcode:
