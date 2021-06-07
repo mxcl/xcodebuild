@@ -66,6 +66,26 @@ jobs:
           configuration: release    # no default, ie. `xcodebuild` decides itself
 ```
 
+```yaml
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        swift:
+          - ~5.3
+          - ~5.4
+          - ^6
+    steps:
+      - use: mxcl/xcodebuild@v1
+        with:
+          swift: ${{ matrix.swift }}
+          # ^^ mxcl/xcodebuild selects the newest Xcode that provides the requested Swift
+          # obviously don’t specify an Xcode constraint *as well*
+         continue-on-error: ${{ matrix.swift == '^6' }}
+          # ^^ pre-emptively try to build against unreleased versions
+```
+
 > † check out https://devhints.io/semver for valid constraints
 
 ## Available Xcodes
