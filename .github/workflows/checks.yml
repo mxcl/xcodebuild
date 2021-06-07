@@ -35,7 +35,7 @@ jobs:
           action: test
 
   verify:
-    name: test.${{ matrix.platform }}.${{ matrix.xcode }}
+    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -43,37 +43,16 @@ jobs:
           - iOS
           - tvOS
           - macOS
-        xcode:
-          - ^10
-          - ^11
-          - ^12
-    steps:
-    - uses: actions/checkout@v2
-    - uses: ./
-      with:
-        platform: ${{ matrix.platform }}
-        xcode: ${{ matrix.xcode }}
-        working-directory: fixture/${{ matrix.platform }}
-
-  # watchOS has more complexity, so we need a larger matrix to ensure
-  # we are covering all our code paths
-  verify-watchos:
-    name: ${{ matrix.action }}.${{ matrix.platform }}.${{ matrix.xcode }}${{ matrix.codecov && '+codecov' || ''}}
-    runs-on: macos-10.15
-    strategy:
-      matrix:
-        platform:
           - watchOS
         xcode:
           - ^10
           - ^11
-          - ^12
         codecov:
-          - true
           - false
         action:
-          - build
           - test
+        errors-as-warnings:
+          - false
     steps:
     - uses: actions/checkout@v2
     - uses: ./
@@ -83,3 +62,60 @@ jobs:
         working-directory: fixture/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
+        errors-as-warnings: ${{ matrix.errors-as-warnings }}
+
+  verify2:
+    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        platform:
+          - watchOS
+        xcode:
+          - ^12
+        codecov:
+          - false
+        action:
+          - build
+          - test
+        errors-as-warnings:
+          - false
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./
+      with:
+        platform: ${{ matrix.platform }}
+        xcode: ${{ matrix.xcode }}
+        working-directory: fixture/${{ matrix.platform }}
+        code-coverage: ${{ matrix.codecov }}
+        action: ${{ matrix.action }}
+        errors-as-warnings: ${{ matrix.errors-as-warnings }}
+
+  verify3:
+    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.errors-as-warnings && ', errors-as-warnings' || ''}})
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        platform:
+          - macOS
+        xcode:
+          - ^12
+        codecov:
+          - true
+          - false
+        action:
+          - build
+          - test
+        errors-as-warnings:
+          - true
+          - false
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./
+      with:
+        platform: ${{ matrix.platform }}
+        xcode: ${{ matrix.xcode }}
+        working-directory: fixture/${{ matrix.platform }}
+        code-coverage: ${{ matrix.codecov }}
+        action: ${{ matrix.action }}
+        errors-as-warnings: ${{ matrix.errors-as-warnings }}

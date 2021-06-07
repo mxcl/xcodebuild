@@ -1,13 +1,12 @@
 on:
   release:
-    types: published
+    types: [published, updated]
 jobs:
   tag:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: echo "v=${v:0:1}" >> $GITHUB_ENV
-        env:
-          v: ${{ github.event.release.tag_name }}
-      - run: git tag --force v$v
-      - run: git push origin v$v --force
+      - uses: sersoft-gmbh/running-release-tags-action@master
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+        if: github.event.release.prerelease == false

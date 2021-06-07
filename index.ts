@@ -1,7 +1,10 @@
-import { destinations, quiet, scheme, spawn, xcselect } from './lib'
+import { quiet, scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination } from './lib'
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
+
+//TODO we also need to set the right flags for other languages
+const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
 
 async function run() {
   const cwd = core.getInput('working-directory')
@@ -10,114 +13,87 @@ async function run() {
   }
 
   const swiftPM = existsSync('Package.swift')
-  const platform = core.getInput('platform')
+  const platform = core.getInput('platform') as Platform
   const selected = await xcselect(core.getInput('xcode'), core.getInput('swift'))
-  const action = figureOutAction()
+  const action = getAction(platform, selected)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
+  const destination = await getDestination(platform)
 
-  core.info(`Selected Xcode ${selected}`)
+  core.info(`Xcode: ${selected}`)
 
-  generateIfNecessary()
-
-  let args = (await destination())
-  args = args.concat(await getScheme())
-  args = args.concat(other())
-  if (quiet()) args.push('-quiet')
-  if (configuration) args = args.concat(['-configuration', configuration])
-
-  try {
-    const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
-
-    core.startGroup('`xcodebuild`')
-
-    if (warningsAsErrors && (action == 'test' || action == 'build-for-testing')) {
-      //TODO we also need to set the right flags for other languages
-      spawn('xcodebuild', args.concat([warningsAsErrorsFlags, 'build']))
-      spawn('xcodebuild', args.concat([action]))
-    } else {
-      if (warningsAsErrors) args.push(warningsAsErrorsFlags)
-      args.push(action)
-      spawn('xcodebuild', args)
-    }
-
-    spawn('xcodebuild', args)
-  } finally {
-    core.endGroup()
+  if (shouldGenerateXcodeproj()) {
+    generateXcodeproj()
   }
+  await build(await getScheme())
 
-  function generateIfNecessary() {
+//// immediate funcs
+
+  function shouldGenerateXcodeproj() {
     if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
       // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
       // failing trying to build the test modules, so we generate a project
-      generate()
+      return true
     } else if (semver.lt(selected, '11.0.0')) {
-      generate()
+      return true
+    } else if (warningsAsErrors && swiftPM) {
+      // `build` with SwiftPM projects will build the tests too, and if there are warnings in the
+      // tests we will then fail to build (it's common that the tests may have ok warnings)
+      //TODO only do this if there are test targets
+      return true
     }
+  }
 
-    function generate() {
-      try {
-        core.startGroup('Generating `.xcodeproj`')
-        spawn('swift', ['package', 'generate-xcodeproj'])
-      } finally {
-        core.endGroup()
+  function generateXcodeproj() {
+    try {
+      core.startGroup('Generating `.xcodeproj`')
+      spawn('swift', ['package', 'generate-xcodeproj'])
+    } finally {
+      core.endGroup()
+    }
+  }
+
+  async function build(scheme: string | undefined) {
+    try {
+      core.startGroup('`xcodebuild`')
+      if (warningsAsErrors && actionIsTestable(action)) {
+        await xcodebuild('build', scheme)
       }
+      await xcodebuild(action, scheme)
+    } finally {
+      core.endGroup()
     }
   }
 
-  function figureOutAction() {
-    const action = core.getInput('action').trim() || 'test'
-    if (semver.gt(selected, '12.5.0')) {
-      return action
-    } else if (platform == 'watchOS' && (action == 'test' || action == 'build-for-testing')) {
-      core.warning("Setting `action=build` for Apple Watch / Xcode <12.5")
-      return 'build'
-    } else {
-      return action
+//// helper funcs
+
+  async function xcodebuild(action: string, scheme: string | undefined): Promise<void> {
+    let args = destination
+    if (scheme) args = args.concat(['-scheme', scheme])
+    if (quiet()) args.push('-quiet')
+    if (configuration) args = args.concat(['-configuration', configuration])
+
+    switch (action) {
+    case 'build':
+      if (warningsAsErrors) args.push(warningsAsErrorsFlags)
+      break
+    case 'test':
+    case 'build-for-testing':
+      if (core.getBooleanInput('code-coverage')) {
+        args = args.concat(['-enableCodeCoverage', 'YES'])
+      }
+      break
     }
+
+    args.push(action)
+
+    spawn('xcodebuild', args)
   }
 
-  function other() {
-    if (core.getBooleanInput('code-coverage') && (action == 'test' || action == 'build-for-testing')) {
-      return ['-enableCodeCoverage', 'YES']
-    } else {
-      return []
-    }
-  }
-
-  async function getScheme() {
+  //NOTE this is not nearly clever enough I think
+  async function getScheme(): Promise<string | undefined> {
     if (swiftPM) {
-      return ['-scheme', await scheme()]
-    } else {
-      return []
-    }
-  }
-
-  async function destination() {
-    switch (platform.trim()) {
-      case 'iOS':
-      case 'tvOS':
-      case 'watchOS':
-        const id = (await destinations())[platform]
-        return ['-destination', `id=${id}`]
-      case 'macOS':
-      case '':
-        return []
-      default:
-        throw new Error(`Invalid platform: ${platform}`)
-    }
-  }
-
-  function getConfiguration() {
-    const conf = core.getInput('configuration')
-    switch (conf) {
-      // both `.xcodeproj` and SwiftPM projects capitalize these
-      // by default, and are case-sensitive. And for both if an
-      // incorrect configuration is specified do not error, but
-      // do not behave as expected instead.
-      case 'debug': return 'Debug'
-      case 'release': return 'Release'
-      default: return conf
+      return await libGetScheme()
     }
   }
 }
