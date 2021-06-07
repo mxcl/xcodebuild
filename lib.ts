@@ -90,6 +90,11 @@ async function scheme(): Promise<string> {
 
 function parseJSON(input: string) {
   try {
+    // works around xcodebuild sometimes outputting this string in CI conditions
+    const xcodebuildSucks = 'build session not created after 15 seconds - still waiting'
+    if (input.endsWith(xcodebuildSucks)) {
+      input = input.slice(0, -xcodebuildSucks.length)
+    }
     return JSON.parse(input)
   } catch (error) {
     core.startGroup("JSON")
