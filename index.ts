@@ -101,6 +101,6 @@ async function run() {
 run().catch(e => {
   core.setFailed(e)
   if (e instanceof SyntaxError && e.stack) {
-    core.debug(e.stack)
+    core.error(e.stack)
   }
 })
