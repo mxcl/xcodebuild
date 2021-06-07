@@ -21,7 +21,7 @@ async function xcodes() {
 function spawn(arg0: string, args: string[]) {
   const { error, status } = spawnSync(arg0, args, {stdio: 'inherit'})
   if (error) throw error
-  if (status != 0) throw new Error(`\`${arg0}\` aborted`)
+  if (status != 0) throw new Error(`\`${arg0}\` aborted (${status})`)
 }
 
 async function xcselect(xcode: string | undefined, swift: string | undefined): Promise<string> {
@@ -118,13 +118,18 @@ async function destinations(): Promise<DestinationsResponse> {
 
 async function exec(command: string, args: string[]): Promise<string> {
   let out = ''
+  try {
+    await gha_exec.exec(command, args, { listeners: {
+      stdout: data => out += data.toString(),
+      stderr: data => process.stderr.write(data.toString())
+    }, silent: quiet()})
 
-  await gha_exec.exec(command, args, { listeners: {
-    stdout: data => out += data.toString(),
-    stderr: data => process.stderr.write(data.toString())
-  }, silent: quiet()})
-
-  return out
+    return out
+  } catch (error) {
+    // help debug efforts by showing what we ran if there was an error
+    core.info(`${command} ${args.join(" \\\n")}`)
+    throw error
+  }
 }
 
 function quiet() {
@@ -136,6 +141,51 @@ function quiet() {
   }
 }
 
+function getConfiguration() {
+  const conf = core.getInput('configuration')
+  switch (conf) {
+    // both `.xcodeproj` and SwiftPM projects capitalize these
+    // by default, and are case-sensitive. And for both if an
+    // incorrect configuration is specified do not error, but
+    // do not behave as expected instead.
+    case 'debug': return 'Debug'
+    case 'release': return 'Release'
+    default: return conf
+  }
+}
+
+export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | ''
+
+export function getAction(platform: Platform, selectedXcode: string) {
+  const action = core.getInput('action').trim() || 'test'
+  if (semver.gt(selectedXcode, '12.5.0')) {
+    return action
+  } else if (platform == 'watchOS' && actionIsTestable(action)) {
+    core.warning("Setting `action=build` for Apple Watch / Xcode <12.5")
+    return 'build'
+  } else {
+    return action
+  }
+}
+
+const actionIsTestable = (action: string) => action == 'test' || action == 'build-for-testing'
+
+export async function getDestination(platform: string) {
+  switch (platform.trim()) {
+    case 'iOS':
+    case 'tvOS':
+    case 'watchOS':
+      const id = (await destinations())[platform]
+      return ['-destination', `id=${id}`]
+    case 'macOS':
+      return ['-destination', 'platform=macOS']
+    case '':
+      return []
+    default:
+      throw new Error(`Invalid platform: ${platform}`)
+  }
+}
+
 export {
-  exec, destinations, scheme, xcselect, spawn, quiet
+  exec, destinations, scheme, xcselect, spawn, quiet, getConfiguration, actionIsTestable
 }
