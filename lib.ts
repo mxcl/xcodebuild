@@ -79,7 +79,7 @@ type DestinationsResponse = {[key: string]: string}
 
 async function scheme(): Promise<string> {
   const out = await exec('xcodebuild', ['-list', '-json'])
-  const json = JSON.parse(out)
+  const json = parseJSON(out)
   const schemes = (json?.workspace ?? json?.project)?.schemes as string[]
   if (!schemes || schemes.length == 0) throw new Error('Could not determine scheme')
   for (const scheme of schemes) {
@@ -88,9 +88,20 @@ async function scheme(): Promise<string> {
   return schemes[0]
 }
 
+function parseJSON(input: string) {
+  try {
+    return JSON.parse(input)
+  } catch (error) {
+    core.startGroup("JSON")
+    core.error(input)
+    core.endGroup()
+    throw error
+  }
+}
+
 async function destinations(): Promise<DestinationsResponse> {
   const out = await exec('xcrun', ['simctl', 'list', '--json', 'devices', 'available'])
-  const devices = (JSON.parse(out) as Devices).devices
+  const devices = (parseJSON(out) as Devices).devices
 
   const rv: {[key: string]: {v: string, id: string}} = {}
   for (const opaqueIdentifier in devices) {
