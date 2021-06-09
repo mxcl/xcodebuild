@@ -108,8 +108,9 @@ async function scheme(): Promise<string> {
   return schemes[0]
 }
 
-function parseJSON(input: string) {
+export function parseJSON(input: string) {
   try {
+    input = input.trim()
     // works around xcodebuild sometimes outputting this string in CI conditions
     const xcodebuildSucks = 'build session not created after 15 seconds - still waiting'
     if (input.endsWith(xcodebuildSucks)) {
