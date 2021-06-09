@@ -75,7 +75,7 @@ jobs:
           - false
         action:
           - test
-        errors-as-warnings:
+        warnings-as-errors:
           - false
     steps:
     - uses: actions/checkout@v2
@@ -86,7 +86,7 @@ jobs:
         working-directory: fixture/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
-        errors-as-warnings: ${{ matrix.errors-as-warnings }}
+        warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   more-xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
@@ -102,7 +102,7 @@ jobs:
         action:
           - build
           - test
-        errors-as-warnings:
+        warnings-as-errors:
           - false
     steps:
     - uses: actions/checkout@v2
@@ -113,10 +113,10 @@ jobs:
         working-directory: fixture/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
-        errors-as-warnings: ${{ matrix.errors-as-warnings }}
+        warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   verify3:
-    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.errors-as-warnings && ', errors-as-warnings' || ''}})
+    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
     runs-on: macos-10.15
     strategy:
       matrix:
@@ -130,7 +130,7 @@ jobs:
         action:
           - build
           - test
-        errors-as-warnings:
+        warnings-as-errors:
           - true
           - false
     steps:
@@ -142,4 +142,4 @@ jobs:
         working-directory: fixture/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
-        errors-as-warnings: ${{ matrix.errors-as-warnings }}
+        warnings-as-errors: ${{ matrix.warnings-as-errors }}
