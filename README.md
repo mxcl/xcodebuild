@@ -17,7 +17,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - use: mxcl/xcodebuild@v1
-      # ^^ this is the simplest use, runs tests for macOS
+      # ^^ this is the simplest use, runs tests for whatever `xcodebuild` picks
 ```
 
 ```yaml
