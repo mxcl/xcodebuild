@@ -197,7 +197,7 @@ export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | ''
 
 export function getAction(platform: Platform, selectedXcode: string) {
   const action = core.getInput('action').trim() || 'test'
-  if (semver.gt(selectedXcode, '12.5.0')) {
+  if (semver.gte(selectedXcode, '12.5.0')) {
     return action
   } else if (platform == 'watchOS' && actionIsTestable(action)) {
     core.warning("Setting `action=build` for Apple Watch / Xcode <12.5")
