@@ -80,8 +80,10 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
     async function swiftVersion([DEVELOPER_DIR, xcodeVersion]: [string, string]): Promise<[string, string, string]> {
       const stdout = await exec('swift', ['--version'], {DEVELOPER_DIR})
       const matches = stdout.match(/Swift version (.+?)\s/m)
-      if (!matches || !matches[1]) throw new Error(`failed to extract swift version: ${xcode}`)
-      return [DEVELOPER_DIR, xcodeVersion, matches[1]]
+      if (!matches || !matches[1]) throw new Error(`failed to extract Swift version from Xcode ${xcodeVersion}`)
+      const version = semver.coerce(matches[1])?.version
+      if (!version) throw new Error(`failed to parse Swift version from Xcode ${xcodeVersion}`)
+      return [DEVELOPER_DIR, xcodeVersion, version]
     }
   }
 }
