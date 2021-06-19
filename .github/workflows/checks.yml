@@ -160,6 +160,22 @@ jobs:
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   verify4:
+    name: ${{ matrix.platform }} (test, ^12)
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        platform:
+          - mac-catalyst
+          - driver-kit
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./
+      with:
+        platform: ${{ matrix.platform }}
+        xcode: ^12
+        working-directory: fixtures/${{ matrix.platform }}
+
+  verify5:
     name: .swift-version
     runs-on: macos-10.15
     steps:
