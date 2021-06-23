@@ -171,7 +171,7 @@ async function exec(command: string, args: string[], env?: {[key: string]: strin
   try {
     await gha_exec.exec(command, args, { listeners: {
       stdout: data => out += data.toString(),
-      stderr: data => core.info(`${command}:stderr: ${'\u001b[33m'}${data.toString()}`)
+      stderr: data => core.info(`⚠ ${command}: ${'\u001b[33m'}${data.toString()}`)
     }, silent: quiet(), env})
 
     return out
