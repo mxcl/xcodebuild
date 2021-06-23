@@ -230,7 +230,7 @@ export async function getDestination(platform: string) {
     case 'macOS':
       return ['-destination', 'platform=macOS']
     case 'mac-catalyst':
-      return ['-destination', 'platform=macOS,variant=Mac Catalyst']
+      return ['-destination', 'platform=macOS,variant=Mac Catalyst', 'CODE_SIGN_IDENTITY=\'\'']
     case 'driver-kit':
       return ['-destination', 'platform=macOS,variant=DriverKit']
     case '':

@@ -178,7 +178,6 @@ jobs:
         platform: ${{ matrix.platform }}
         xcode: ^13
         working-directory: fixtures/${{ matrix.platform }}
-        action: build
 
   verify5:
     name: .swift-version
