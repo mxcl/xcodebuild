@@ -132,6 +132,8 @@ run().catch(async e => {
       await artifact.create().uploadArtifact(xcresult, getFiles(xcresult), '.')
     }
 
+    core.warning("We feel you. CI failures suck. Download the `.xcresult` files we just artifact’d. They *really* help diagnose what went wrong!")
+
   } finally {
     core.endGroup()
   }
