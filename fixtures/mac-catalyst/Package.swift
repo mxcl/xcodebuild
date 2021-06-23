@@ -20,6 +20,5 @@ pkg.platforms = [
     .iOS(.v9),
     .tvOS(.v9),
     .watchOS(.v3),
-    .macCatalyst(.v13),
-    .driverKit(.v19)
+    .macCatalyst(.v13)
 ]

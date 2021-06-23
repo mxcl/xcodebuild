@@ -220,7 +220,7 @@ export function getAction(platform: Platform, selectedXcode: string) {
 
 const actionIsTestable = (action: string) => action == 'test' || action == 'build-for-testing'
 
-export async function getDestination(platform: string) {
+export async function getDestination(platform: string): Promise<string[]> {
   switch (platform.trim()) {
     case 'iOS':
     case 'tvOS':
@@ -230,9 +230,7 @@ export async function getDestination(platform: string) {
     case 'macOS':
       return ['-destination', 'platform=macOS']
     case 'mac-catalyst':
-      return ['-destination', 'platform=macOS,variant=Mac Catalyst', 'CODE_SIGN_IDENTITY=\'\'']
-    case 'driver-kit':
-      return ['-destination', 'platform=macOS,variant=DriverKit']
+      return ['-destination', 'platform=macOS,variant=Mac Catalyst', 'CODE_SIGN_IDENTITY=-']
     case '':
       return []
     default:
