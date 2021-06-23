@@ -99,6 +99,13 @@ To install other versions first use [sinoru/actions-setup-xcode], then
 `mxcl/xcodebuild` *will find that Xcode* if you specify an appropriate value for
 the `xcode` input.
 
+# Logs
+
+We automatically upload the build logs as artifacts on failure.
+
+The resulting artifact is an `.xcresult` “package” and once downloaded will
+open in Xcode.
+
 # `.swift-version` File
 
 If your repo has a `.swift-version` file and neither `swift` no `xcode` is

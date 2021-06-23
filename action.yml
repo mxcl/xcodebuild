@@ -1,6 +1,8 @@
 name: mxcl/Xcodebuild
 author: Max Howell
-description: A continuously resilient `xcodebuild` action
+description: >
+  A continuously resilient `xcodebuild` action.
+  “The best `xcodebuild` action by far.” ―mxcl
 inputs:
   xcode:
     description: |

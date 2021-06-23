@@ -5,6 +5,7 @@
     "test": "intern suites=*.test.ts"
   },
   "dependencies": {
+    "@actions/artifact": "^0.5.1",
     "@actions/core": "^1.3.0",
     "@actions/exec": "^1.0.4",
     "semver": "^6.3.0"
