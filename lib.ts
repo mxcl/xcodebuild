@@ -34,7 +34,7 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
   } else if (xcode) {
     return await selectXcode(xcode)
   } else if (gotDotSwiftVersion = dotSwiftVersion()) {
-    core.info(`Using \`.swift-version\` as \`~> ${gotDotSwiftVersion}\``)
+    core.info(`» \`.swift-version\` » ~> ${gotDotSwiftVersion}`)
     return await selectSwift(gotDotSwiftVersion)
   } else {
 
@@ -77,7 +77,7 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
 
     if (!rv3) throw new Error(`No Xcode with Swift ~> ${constraint}`)
 
-    core.info(`Swift: ${rv3[2]}`)
+    core.info(`» Swift ${rv3[2]}`)
 
     spawn('sudo', ['xcode-select', '--switch', rv3[0]])
 
@@ -171,13 +171,13 @@ async function exec(command: string, args: string[], env?: {[key: string]: strin
   try {
     await gha_exec.exec(command, args, { listeners: {
       stdout: data => out += data.toString(),
-      stderr: data => core.warning(`${args[0]}:stderr: ${data.toString()}`)
+      stderr: data => core.info(`${command}:stderr: ${'\u001b[33m'}${data.toString()}`)
     }, silent: quiet(), env})
 
     return out
   } catch (error) {
     // help debug efforts by showing what we ran if there was an error
-    core.info(`${command} ${args.join(" \\\n")}`)
+    core.info(`» ${command} ${args.join(" \\\n")}`)
     throw error
   }
 }

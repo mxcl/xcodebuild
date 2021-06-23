@@ -1,7 +1,10 @@
 import { quiet, scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination } from './lib'
+const artifact = require('@actions/artifact');
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
+import * as fs from 'fs'
+import { extname } from 'path'
 
 //TODO we also need to set the right flags for other languages
 const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
@@ -20,7 +23,7 @@ async function run() {
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
   const destination = await getDestination(platform)
 
-  core.info(`Xcode: ${selected}`)
+  core.info(`» Xcode ${selected}`)
 
   if (shouldGenerateXcodeproj()) {
     generateXcodeproj()
@@ -73,6 +76,9 @@ async function run() {
     if (quiet()) args.push('-quiet')
     if (configuration) args = args.concat(['-configuration', configuration])
 
+    //TODO needs a unique name or multiple failures will trounce each other
+    args = args.concat(['-resultBundlePath', `${action}`])
+
     switch (action) {
     case 'build':
       if (warningsAsErrors) args.push(warningsAsErrorsFlags)
@@ -98,9 +104,35 @@ async function run() {
   }
 }
 
-run().catch(e => {
+run().catch(async e => {
   core.setFailed(e)
   if (e instanceof SyntaxError && e.stack) {
     core.error(e.stack)
+  }
+
+  try {
+    core.startGroup('Uploading Logs')
+
+    const getFiles = (path: string) => {
+      let files: string[] = []
+      for (const file of fs.readdirSync(path)) {
+        const fullPath = path + '/' + file
+        if(fs.lstatSync(fullPath).isDirectory()) {
+          files = files.concat(getFiles(fullPath))
+        } else {
+          files.push(fullPath)
+        }
+      }
+      return files
+    }
+
+    const xcresults = fs.readdirSync('.').filter(path => extname(path) == '.xcresult')
+
+    for (const xcresult of xcresults) {
+      await artifact.create().uploadArtifact(xcresult, getFiles(xcresult), '.')
+    }
+
+  } finally {
+    core.endGroup()
   }
 })
