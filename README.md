@@ -99,6 +99,16 @@ To install other versions first use [sinoru/actions-setup-xcode], then
 `mxcl/xcodebuild` *will find that Xcode* if you specify an appropriate value for
 the `xcode` input.
 
+# `.swift-version` File
+
+If your repo has a `.swift-version` file and neither `swift` no `xcode` is
+specified it will be read and that Swift version resolved.
+
+If `working-directory` is set, the `.swift-version` file is read from this
+directory.
+
+This behavior cannot currently be disabled, PR welcome.
+
 # Caveats
 
 * The selected Xcode remains the default Xcode for the image for the duration of
@@ -108,14 +118,11 @@ your job.
 
 * We’re smart based on the selected Xcode version, for example we know watchOS
 cannot be tested prior to 12.5 and run xcodebuild with `build` instead
-* We figure out the newest simulator to use for you so you don’t have to be a
-wizard and your CI will stop breaking every few months
+* We figure out the the simulator destination for you automatically. Stop
+specifying fragile strings like `platform=iphonesimulator,os=14.5,name=iPhone 12`
+that will break when Xcode updates next week.
 * You probably don’t need to specify project or scheme since we aren’t tedious
 if possible
-* As you probably already figured out, we determine the simulator destination
-for you automatically. No more specifying fragile strings like
-`platform=iphonesimulator,os=14.5,name=iPhone 12` that will break when Xcode
-updates next week.
 
 ## Continuous Resilience
 
