@@ -2,6 +2,7 @@ on:
   pull_request:
     paths:
       - '*.ts'
+      - 'fixtures/**/*.swift'
       - .github/workflows/checks.yml
       - dist/*
 concurrency:
