@@ -9,22 +9,22 @@ concurrency:
   cancel-in-progress: true
 jobs:
   tests:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     steps:
     - uses: actions/checkout@v2
     - run: npm install
     - run: npm test
 
   defaults:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     steps:
       - uses: actions/checkout@v2
       - uses: ./
         with:
-          working-directory: fixture/debug
+          working-directory: fixtures/debug
 
   configurations:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     strategy:
       matrix:
         configuration:
@@ -35,28 +35,38 @@ jobs:
       - uses: ./
         with:
           configuration: ${{ matrix.configuration }}
-          working-directory: fixture/${{ matrix.configuration }}
+          working-directory: fixtures/${{ matrix.configuration }}
           warnings-as-errors: true
           action: test
 
   swift:
-    runs-on: macos-10.15
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        swift:
-          - ~5.0
-          - ~5.1
-          - ~5.2
-          - ~5.3
-          - ~5.4
+        include:
+          - swift: ~5.0
+            os: macos-10.15
+          - swift: ~5.1
+            os: macos-10.15
+          - swift: ~5.2
+            os: macos-10.15
+          - swift: ~5.3
+            os: macos-10.15
+          - swift: ~5.4
+            os: macos-11
+          - swift: ~5.5
+            os: macos-11
     steps:
     - uses: actions/checkout@v2
     - uses: ./
       with:
         swift: ${{ matrix.swift }}
-        working-directory: fixture/swift/${{ matrix.swift }}
+        working-directory: fixtures/swift/${{ matrix.swift }}
         action: build
-      continue-on-error: ${{ matrix.swift == '~5.4' }}
+    - uses: mxcl/get-swift-version@v1
+      with:
+        requires: ${{ matrix.swift }}
+
 
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
@@ -83,16 +93,19 @@ jobs:
       with:
         platform: ${{ matrix.platform }}
         xcode: ${{ matrix.xcode }}
-        working-directory: fixture/${{ matrix.platform }}
+        working-directory: fixtures/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   more-xcode:
-    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
-    runs-on: macos-10.15
+    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - macos-10.15
+          - macos-11
         platform:
           - watchOS
         xcode:
@@ -110,11 +123,12 @@ jobs:
       with:
         platform: ${{ matrix.platform }}
         xcode: ${{ matrix.xcode }}
-        working-directory: fixture/${{ matrix.platform }}
+        working-directory: fixtures/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
+  # testing codecov input
   verify3:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
     runs-on: macos-10.15
@@ -139,7 +153,22 @@ jobs:
       with:
         platform: ${{ matrix.platform }}
         xcode: ${{ matrix.xcode }}
-        working-directory: fixture/${{ matrix.platform }}
+        working-directory: fixtures/${{ matrix.platform }}
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
+
+  verify4:
+    name: .swift-version
+    runs-on: macos-10.15
+    steps:
+    - uses: actions/checkout@v2
+    - uses: mxcl/get-swift-version@v1
+      with:
+        requires: '>5.1'
+    - uses: ./
+      with:
+        working-directory: fixtures/dot-swift-version
+    - uses: mxcl/get-swift-version@v1
+      with:
+        requires: ~5.1

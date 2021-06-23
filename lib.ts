@@ -1,8 +1,9 @@
 import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
-import semver from 'semver'
+import semver, { SemVer } from 'semver'
 import path from 'path'
 import * as core from '@actions/core'
+import * as fs from 'fs'
 
 async function xcodes() {
   const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
@@ -26,10 +27,15 @@ function spawn(arg0: string, args: string[]) {
 
 async function xcselect(xcode: string | undefined, swift: string | undefined): Promise<string> {
 
+  let gotDotSwiftVersion: string | undefined
+
   if (swift) {
     return await selectSwift(swift)
   } else if (xcode) {
     return await selectXcode(xcode)
+  } else if (gotDotSwiftVersion = dotSwiftVersion()) {
+    core.info(`Using \`.swift-version\` as \`~> ${gotDotSwiftVersion}\``)
+    return await selectSwift(gotDotSwiftVersion)
   } else {
 
     // figure out the GHA image default Xcode’s version
@@ -85,6 +91,11 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
       if (!version) throw new Error(`failed to parse Swift version from Xcode ${xcodeVersion}`)
       return [DEVELOPER_DIR, xcodeVersion, version]
     }
+  }
+
+  function dotSwiftVersion(): string | undefined {
+    if (!fs.existsSync('.swift-version')) return
+    return fs.readFileSync('.swift-version').toString().trim()
   }
 }
 
@@ -160,7 +171,7 @@ async function exec(command: string, args: string[], env?: {[key: string]: strin
   try {
     await gha_exec.exec(command, args, { listeners: {
       stdout: data => out += data.toString(),
-      stderr: data => process.stderr.write(data.toString())
+      stderr: data => core.warning(`${args[0]}:stderr: ${data.toString()}`)
     }, silent: quiet(), env})
 
     return out
