@@ -5,6 +5,8 @@ Make your software #continuously-resilient as well as continuously integrated.
 This action will continue to work forever, no more CI breakage because Xcode
 is updated.
 
+The action will build both Xcode projects and Swift packages.
+
 ## [Sponsor @mxcl](https://github.com/sponsors/mxcl)
 
 I can only afford to maintain projects I need or that are sponsored. Thanks.
@@ -17,7 +19,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - use: mxcl/xcodebuild@v1
-      # ^^ this is the simplest use, runs tests for whatever `xcodebuild` picks
+      # ^^ this is the simplest use, runs tests for whatever platform `xcodebuild` picks
 ```
 
 ```yaml
@@ -42,9 +44,6 @@ jobs:
   build:
     strategy:
       matrix:
-        os:
-          - macos-11
-          - macos-10.15
         platform:
           - macOS
           - watchOS
@@ -54,7 +53,7 @@ jobs:
           - ^10  # a semantically versioned constraint †
           - ^11
           - ^12
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-10.15
     steps:
       - use: mxcl/xcodebuild@v1
         with:
@@ -69,7 +68,7 @@ jobs:
 ```yaml
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-11
     strategy:
       matrix:
         swift:
@@ -82,8 +81,35 @@ jobs:
           swift: ${{ matrix.swift }}
           # ^^ mxcl/xcodebuild selects the newest Xcode that provides the requested Swift
           # obviously don’t specify an Xcode constraint *as well*
-         continue-on-error: ${{ matrix.swift == '^6' }}
-          # ^^ pre-emptively try to build against unreleased versions
+        continue-on-error: ${{ matrix.swift == '^6' }}
+        # ^^ pre-emptively try to build against unreleased versions
+```
+
+If you need to test against Swift versions that cross macOS images then you will
+want something like this:
+
+```yaml
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        swift:
+          - ~5.0          # Xcode 10.3
+          - ~5.1          # Xcode 11.3.1
+          - ~5.2          # Xcode 11.7
+          - ~5.3          # Xcode 12.4
+        os:
+          - macos-10.15
+        include:
+          - swift: ~5.4   # Xcode 12.5.1
+            os: macos-11
+          - swift: ~5.5
+            os: macos-11  # Xcode 13
+    steps:
+      - use: mxcl/xcodebuild@v1
+        with:
+          swift: ${{ matrix.swift }}
 ```
 
 > † check out https://devhints.io/semver for valid constraints
