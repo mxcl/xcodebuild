@@ -31,9 +31,6 @@ inputs:
   working-directory:
     description: '…'
     required: false
-  quiet:
-    description: Only output errors
-    required: false
   configuration:
     description: |
       Typically `Release` or `Debug`.
@@ -43,6 +40,9 @@ inputs:
     description: Fails the build if any warnings in *non test targets*.
     required: false
     default: false
+  verbosity:
+    description: One of `xcpretty`, `quiet` or `verbose`.
+    default: xcpretty
 runs:
   using: 'node12'
   main: 'dist/index.js'

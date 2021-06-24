@@ -1,10 +1,11 @@
-import { quiet, scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination } from './lib'
+import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, verbosity } from './lib'
+import xcodebuildX from './xcodebuild'
 const artifact = require('@actions/artifact');
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
 import * as fs from 'fs'
-import { extname } from 'path'
+import { basename, extname } from 'path'
 
 //TODO we also need to set the right flags for other languages
 const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
@@ -22,6 +23,7 @@ async function run() {
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
   const destination = await getDestination(platform)
+  const xcpretty = verbosity() == 'xcpretty'
 
   core.info(`» Xcode ${selected}`)
 
@@ -57,43 +59,42 @@ async function run() {
   }
 
   async function build(scheme: string | undefined) {
-    try {
-      core.startGroup('`xcodebuild`')
-      if (warningsAsErrors && actionIsTestable(action)) {
-        await xcodebuild('build', scheme)
-      }
-      await xcodebuild(action, scheme)
-    } finally {
-      core.endGroup()
+    if (warningsAsErrors && actionIsTestable(action)) {
+      await xcodebuild('build', scheme)
     }
+    await xcodebuild(action, scheme)
   }
 
 //// helper funcs
 
   async function xcodebuild(action: string, scheme: string | undefined): Promise<void> {
-    let args = destination
-    if (scheme) args = args.concat(['-scheme', scheme])
-    if (quiet()) args.push('-quiet')
-    if (configuration) args = args.concat(['-configuration', configuration])
+    try {
+      core.startGroup(`\`xcodebuild ${action}\``)
+      let args = destination
+      if (scheme) args = args.concat(['-scheme', scheme])
+      if (verbosity() == 'quiet') args.push('-quiet')
+      if (configuration) args = args.concat(['-configuration', configuration])
 
-    //TODO needs a unique name or multiple failures will trounce each other
-    args = args.concat(['-resultBundlePath', `${action}`])
+      args = args.concat(['-resultBundlePath', `${action}`])
 
-    switch (action) {
-    case 'build':
-      if (warningsAsErrors) args.push(warningsAsErrorsFlags)
-      break
-    case 'test':
-    case 'build-for-testing':
-      if (core.getBooleanInput('code-coverage')) {
-        args = args.concat(['-enableCodeCoverage', 'YES'])
+      switch (action) {
+      case 'build':
+        if (warningsAsErrors) args.push(warningsAsErrorsFlags)
+        break
+      case 'test':
+      case 'build-for-testing':
+        if (core.getBooleanInput('code-coverage')) {
+          args = args.concat(['-enableCodeCoverage', 'YES'])
+        }
+        break
       }
-      break
+
+      args.push(action)
+
+      await xcodebuildX(args, xcpretty)
+    } finally {
+      core.endGroup()
     }
-
-    args.push(action)
-
-    spawn('xcodebuild', args)
   }
 
   //NOTE this is not nearly clever enough I think
@@ -129,10 +130,23 @@ run().catch(async e => {
     const xcresults = fs.readdirSync('.').filter(path => extname(path) == '.xcresult')
 
     for (const xcresult of xcresults) {
-      await artifact.create().uploadArtifact(xcresult, getFiles(xcresult), '.')
+      const base = basename(xcresult, '.xcresult')
+      const id = `${process.env.GITHUB_RUN_ID}#${process.env.GITHUB_RUN_NUMBER}`
+      const name = `${base}.${id}.xcresult`
+      await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
     }
 
-    core.warning("We feel you. CI failures suck. Download the `.xcresult` files we just artifact’d. They *really* help diagnose what went wrong!")
+    const id = `${process.env.GITHUB_RUN_ID}`
+    const slug = process.env.GITHUB_REPOSITORY
+    const href = `https://github.com/${slug}/actions/runs/${id}#artifact`
+
+    core.warning(`
+      We feel you.
+      CI failures suck.
+      Download the \`.xcresult\` files we just artifact’d.
+      They *really* help diagnose what went wrong!
+      ${href}
+      `.replace(/\s+/g, ' '))
 
   } finally {
     core.endGroup()

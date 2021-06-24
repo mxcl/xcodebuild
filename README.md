@@ -13,6 +13,8 @@ I can only afford to maintain projects I need or that are sponsored. Thanks.
 
 ## Usage
 
+> For complete input/output documentation, see [action.yml](action.yml).
+
 ```yaml
 jobs:
   build:
@@ -133,6 +135,8 @@ The resulting artifact is an `.xcresult` “package” and once downloaded will
 open in Xcode:
 
 ![img]
+
+You’ll even get your coverage report!
 
 # `.swift-version` File
 
