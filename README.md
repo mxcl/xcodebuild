@@ -35,6 +35,7 @@ jobs:
           - watchOS
           - tvOS
           - iOS
+          - mac-catalyst
     steps:
       - use: mxcl/xcodebuild@v1
         with:
@@ -127,7 +128,7 @@ To install other versions first use [sinoru/actions-setup-xcode], then
 `mxcl/xcodebuild` *will find that Xcode* if you specify an appropriate value for
 the `xcode` input.
 
-# Logs
+## Logs
 
 We automatically upload the build logs as artifacts on failure.
 
@@ -138,9 +139,9 @@ opened in Xcode:
 
 You’ll even get your coverage report!
 
-# `.swift-version` File
+## `.swift-version` File
 
-If your repo has a `.swift-version` file and neither `swift` no `xcode` is
+If your repo has a `.swift-version` file and neither `swift` nor `xcode` is
 specified it will be read and that Swift version resolved.
 
 If `working-directory` is set, the `.swift-version` file is read from this
@@ -148,7 +149,7 @@ directory.
 
 This behavior cannot currently be disabled, PR welcome.
 
-# Caveats
+## Caveats
 
 * The selected Xcode remains the default Xcode for the image for the duration of
 your job.
@@ -173,6 +174,29 @@ if possible
 * Set up a scheduled job for your CI for at least once a week
   * This way you’ll be notified if a new version of something (like Xcode)
     causes breakage in your builds
+
+## Linux
+
+If your project is a Swift Package (which it would have to be to build on Linux)
+then by far the best and quickest way to build on Linux is by using the official
+Swift docker containers:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        swift:
+          - '5.0'  # string or you’ll get 5.5!
+          - 5.1
+    container:
+      image: swift:${{ matrix.swift }}
+    steps:
+      - run: swift test
+```
+
+This action does not support Linux.
 
 ## Contributing
 
