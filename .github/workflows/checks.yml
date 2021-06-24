@@ -39,6 +39,7 @@ jobs:
           working-directory: fixtures/${{ matrix.configuration }}
           warnings-as-errors: true
           action: test
+          upload-logs: always  # so we can test this feature
 
   verbosity:
     runs-on: macos-10.15
