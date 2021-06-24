@@ -139,6 +139,8 @@ opened in Xcode:
 
 You’ll even get your coverage report!
 
+> Note this feature requires Xcode >= 11
+
 ## `.swift-version` File
 
 If your repo has a `.swift-version` file and neither `swift` nor `xcode` is

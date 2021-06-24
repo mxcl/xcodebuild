@@ -145,15 +145,18 @@ async function uploadLogs() {
 
     const xcresults = fs.readdirSync('.').filter(path => extname(path) == '.xcresult')
 
+    if (xcresults.length === 0) {
+      core.warning("strange… no `.xcresult` bundles found")
+    }
+
     for (const xcresult of xcresults) {
 
       // random part because GitHub doesn’t yet expose any kind of per-job, per-matrix ID
       // https://github.community/t/add-build-number/16149/17
-      const rand = Math.random().toString(36).replace(/[^a-zA-Z0-9]+/g, '').substr(0, 6)
+      const nonce = Math.random().toString(36).replace(/[^a-zA-Z0-9]+/g, '').substr(0, 6)
 
       const base = basename(xcresult, '.xcresult')
-      const id = `\`${process.env.GITHUB_JOB}\` #${process.env.GITHUB_RUN_NUMBER}+${rand}`
-      const name = `${base} (${id}).xcresult`
+      const name = `${base}#${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
       await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
     }
   } finally {
