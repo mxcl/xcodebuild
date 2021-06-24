@@ -131,8 +131,8 @@ the `xcode` input.
 
 We automatically upload the build logs as artifacts on failure.
 
-The resulting artifact is an `.xcresult` “package” and once downloaded will
-open in Xcode:
+The resulting artifact is an `.xcresult` “bundle” and once downloaded can be
+opened in Xcode:
 
 ![img]
 

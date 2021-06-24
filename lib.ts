@@ -5,15 +5,24 @@ import path from 'path'
 import * as core from '@actions/core'
 import * as fs from 'fs'
 
+async function mdls(path: string): Promise<string | undefined> {
+  const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
+  if (core.getInput('verbosity') == 'verbose') {
+    // in verbose mode all commands and outputs are printed
+    // and mdls in `raw` mode does not terminate its lines
+    process.stdout.write("\n")
+  }
+  return semver.coerce(v)?.version
+}
+
 async function xcodes() {
   const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
   const rv: [string, string][] = []
   for (const path of paths) {
     if (!path.trim()) continue;
-    const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
-    const vv = semver.coerce(v)?.version
-    if (vv) {
-      rv.push([path, vv])
+    const v = await mdls(path)
+    if (v) {
+      rv.push([path, v])
     }
   }
   return rv
@@ -42,8 +51,7 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
 
     const devdir = await exec('xcode-select', ['--print-path'])
     const xcodePath = path.dirname(path.dirname(devdir))
-    const rawVersion = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', xcodePath])
-    const version = semver.coerce(rawVersion)?.version
+    const version = await mdls(xcodePath)
     if (version) {
       return version
     } else {
@@ -77,7 +85,7 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
 
     if (!rv3) throw new Error(`No Xcode with Swift ~> ${constraint}`)
 
-    core.info(`» Swift ${rv3[2]}`)
+    core.info(`» Selected Swift ${rv3[2]}`)
 
     spawn('sudo', ['xcode-select', '--switch', rv3[0]])
 

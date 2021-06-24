@@ -5,7 +5,7 @@ import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
 import * as fs from 'fs'
-import { basename, extname } from 'path'
+import { basename, extname, join } from 'path'
 
 //TODO we also need to set the right flags for other languages
 const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
@@ -25,33 +25,41 @@ async function run() {
   const destination = await getDestination(platform)
   const xcpretty = verbosity() == 'xcpretty'
 
-  core.info(`» Xcode ${selected}`)
+  core.info(`» Selected Xcode ${selected}`)
 
-  if (shouldGenerateXcodeproj()) {
-    generateXcodeproj()
+  let reason: string | undefined | false
+  if (reason = shouldGenerateXcodeproj()) {
+    generateXcodeproj(reason)
   }
+
   await build(await getScheme())
+
+  if (core.getInput('upload-logs') == 'always') {
+    await uploadLogs()
+  }
 
 //// immediate funcs
 
-  function shouldGenerateXcodeproj() {
-    if (platform == 'watchOS' && swiftPM && semver.lt(selected, '12.5.0')) {
+  function shouldGenerateXcodeproj(): string | false | undefined {
+    if (!swiftPM) return false
+    if (platform == 'watchOS' && semver.lt(selected, '12.5.0')) {
       // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
       // failing trying to build the test modules, so we generate a project
-      return true
+      return 'Xcode <12.5 fails to build Swift Packages for watchOS if tests exist'
     } else if (semver.lt(selected, '11.0.0')) {
-      return true
-    } else if (warningsAsErrors && swiftPM) {
+      return 'Xcode <11 cannot build'
+    } else if (warningsAsErrors) {
       // `build` with SwiftPM projects will build the tests too, and if there are warnings in the
       // tests we will then fail to build (it's common that the tests may have ok warnings)
       //TODO only do this if there are test targets
-      return true
+      return '`warningsAsErrors` is set'
     }
   }
 
-  function generateXcodeproj() {
+  function generateXcodeproj(reason: string) {
     try {
       core.startGroup('Generating `.xcodeproj`')
+      core.info(`Generating \`.xcodeproj\` ∵ ${reason}`)
       spawn('swift', ['package', 'generate-xcodeproj'])
     } finally {
       core.endGroup()
@@ -110,45 +118,46 @@ run().catch(async e => {
   if (e instanceof SyntaxError && e.stack) {
     core.error(e.stack)
   }
+//968465017#145
+//968465017#145
+
+  await uploadLogs()
+
+  const id = `${process.env.GITHUB_RUN_ID}`
+  const slug = process.env.GITHUB_REPOSITORY
+  const href = `https://github.com/${slug}/actions/runs/${id}#artifact`
+
+  core.warning(`
+    We feel you.
+    CI failures suck.
+    Download the \`.xcresult\` files we just artifact’d.
+    They *really* help diagnose what went wrong!
+    ${href}
+    `.replace(/\s+/g, ' '))
+})
+
+async function uploadLogs() {
+  const getFiles: (path: string) => string[] = path => fs.readdirSync(path)
+    .map(file => join(path, file))
+    .flatMap(path => fs.lstatSync(path).isDirectory() ? getFiles(path) : [path])
 
   try {
     core.startGroup('Uploading Logs')
 
-    const getFiles = (path: string) => {
-      let files: string[] = []
-      for (const file of fs.readdirSync(path)) {
-        const fullPath = path + '/' + file
-        if(fs.lstatSync(fullPath).isDirectory()) {
-          files = files.concat(getFiles(fullPath))
-        } else {
-          files.push(fullPath)
-        }
-      }
-      return files
-    }
-
     const xcresults = fs.readdirSync('.').filter(path => extname(path) == '.xcresult')
 
     for (const xcresult of xcresults) {
+
+      // random part because GitHub doesn’t yet expose any kind of per-job, per-matrix ID
+      // https://github.community/t/add-build-number/16149/17
+      const rand = Math.random().toString(36).replace(/[^a-zA-Z0-9]+/g, '').substr(0, 6)
+
       const base = basename(xcresult, '.xcresult')
-      const id = `${process.env.GITHUB_RUN_ID}#${process.env.GITHUB_RUN_NUMBER}`
-      const name = `${base}.${id}.xcresult`
+      const id = `\`${process.env.GITHUB_JOB}\` #${process.env.GITHUB_RUN_NUMBER}+${rand}`
+      const name = `${base} (${id}).xcresult`
       await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
     }
-
-    const id = `${process.env.GITHUB_RUN_ID}`
-    const slug = process.env.GITHUB_REPOSITORY
-    const href = `https://github.com/${slug}/actions/runs/${id}#artifact`
-
-    core.warning(`
-      We feel you.
-      CI failures suck.
-      Download the \`.xcresult\` files we just artifact’d.
-      They *really* help diagnose what went wrong!
-      ${href}
-      `.replace(/\s+/g, ' '))
-
   } finally {
     core.endGroup()
   }
-})
+}
