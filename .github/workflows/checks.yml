@@ -1,3 +1,8 @@
+# we’re generally picking macos-10.15 rather than latest
+# because macos-11 is currently much slower
+# however we would prefer macos-latest where possible to
+# make this CI more resilient to time
+
 on:
   pull_request:
     paths:
@@ -9,13 +14,6 @@ concurrency:
   group: ${{ github.head_ref }}
   cancel-in-progress: true
 jobs:
-  tests:
-    runs-on: macos-10.15
-    steps:
-    - uses: actions/checkout@v2
-    - run: npm install
-    - run: npm test
-
   defaults:
     runs-on: macos-10.15
     steps:
@@ -57,16 +55,17 @@ jobs:
           working-directory: fixtures/debug
 
   swift:
+    name: swift ${{ matrix.swift }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os:
-          - macos-10.15
         swift:
           - ~5.0
           - ~5.1
           - ~5.2
           - ~5.3
+        os:
+          - macos-10.15
         include:
           - swift: ~5.4
             os: macos-11

@@ -115,11 +115,10 @@ async function run() {
 
 run().catch(async e => {
   core.setFailed(e)
+
   if (e instanceof SyntaxError && e.stack) {
     core.error(e.stack)
   }
-//968465017#145
-//968465017#145
 
   await uploadLogs()
 

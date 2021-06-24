@@ -1,6 +1,6 @@
 import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
-import semver, { SemVer } from 'semver'
+import semver from 'semver'
 import path from 'path'
 import * as core from '@actions/core'
 import * as fs from 'fs'
