@@ -40,19 +40,33 @@ jobs:
           warnings-as-errors: true
           action: test
 
+  verbosity:
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        verbosity:
+          - xcpretty
+          - quiet
+          - verbose
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          verbosity: ${{ matrix.verbosity }}
+          working-directory: fixtures/debug
+
   swift:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - macos-10.15
+        swift:
+          - ~5.0
+          - ~5.1
+          - ~5.2
+          - ~5.3
         include:
-          - swift: ~5.0
-            os: macos-10.15
-          - swift: ~5.1
-            os: macos-10.15
-          - swift: ~5.2
-            os: macos-10.15
-          - swift: ~5.3
-            os: macos-10.15
           - swift: ~5.4
             os: macos-11
           - swift: ~5.5

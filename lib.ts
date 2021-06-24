@@ -172,7 +172,7 @@ async function exec(command: string, args: string[], env?: {[key: string]: strin
     await gha_exec.exec(command, args, { listeners: {
       stdout: data => out += data.toString(),
       stderr: data => core.info(`⚠ ${command}: ${'\u001b[33m'}${data.toString()}`)
-    }, silent: quiet(), env})
+    }, silent: verbosity() != 'verbose', env})
 
     return out
   } catch (error) {
@@ -182,12 +182,19 @@ async function exec(command: string, args: string[], env?: {[key: string]: strin
   }
 }
 
-function quiet() {
-  const rawInput = core.getInput('quiet').trim()
-  if (rawInput === '') {
-    return !core.isDebug()  // default is quiet unless debug is enabled for the workflow
-  } else {
-    return core.getBooleanInput('quiet')
+function verbosity(): 'xcpretty' | 'quiet' | 'verbose' {
+  const value = core.getInput('verbosity')
+  switch (value) {
+  case 'xcpretty':
+  case 'quiet':
+  case 'verbose':
+    return value
+  default:
+    // backwards compatability
+    if (core.getBooleanInput('quiet')) return 'quiet'
+
+    core.warning(`invalid value for \`verbosity\` (${value})`)
+    return 'xcpretty'
   }
 }
 
@@ -239,5 +246,5 @@ export async function getDestination(platform: string): Promise<string[]> {
 }
 
 export {
-  exec, destinations, scheme, xcselect, spawn, quiet, getConfiguration, actionIsTestable
+  exec, destinations, scheme, xcselect, spawn, verbosity, getConfiguration, actionIsTestable
 }
