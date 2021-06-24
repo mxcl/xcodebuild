@@ -118,6 +118,8 @@ jobs:
         code-coverage: ${{ matrix.codecov }}
         action: ${{ matrix.action }}
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
+    - run: |
+        xcode-select --print-path
 
   more-xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}, ${{ matrix.os }})
@@ -150,7 +152,7 @@ jobs:
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   verify-codecov:
-    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
+    name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
     runs-on: macos-latest
     strategy:
       matrix:
