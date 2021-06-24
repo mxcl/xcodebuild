@@ -68,10 +68,9 @@ jobs:
       with:
         requires: ${{ matrix.swift }}
 
-
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
-    runs-on: macos-10.15
+    runs-on: ${{ matrix.os || 'macos-11' }}
     strategy:
       matrix:
         platform:
@@ -82,12 +81,22 @@ jobs:
         xcode:
           - ^10
           - ^11
+          - ^12
+          - ^13
         codecov:
           - false
         action:
           - test
         warnings-as-errors:
           - false
+        include:
+          - xcode: ^10
+            os: macos-10.15
+          - platform: mac-catalyst
+            xcode: ^13
+            codecov: false
+            action: test
+            warnings-as-errors: false
     steps:
     - uses: actions/checkout@v2
     - uses: ./
@@ -129,8 +138,7 @@ jobs:
         action: ${{ matrix.action }}
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
-  # testing codecov input
-  verify3:
+  verify-codecov:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
     runs-on: macos-10.15
     strategy:
@@ -159,7 +167,7 @@ jobs:
         action: ${{ matrix.action }}
         warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
-  verify4:
+  verify-swift-version:
     name: .swift-version
     runs-on: macos-10.15
     steps:
