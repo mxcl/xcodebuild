@@ -163,6 +163,7 @@ specifying fragile strings like `platform=iphonesimulator,os=14.5,name=iPhone 12
 that will break when Xcode updates next week.
 * You probably don’t need to specify project or scheme since we aren’t tedious
 if possible
+* `warnings-as-errors` is only applied to normal targets: not your tests
 
 ## Continuous Resilience
 
