@@ -221,19 +221,19 @@ function getConfiguration() {
 
 export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | ''
 
-export function getAction(platform: Platform, selectedXcode: string) {
-  const action = core.getInput('action').trim() || 'test'
+export function getAction(platform: Platform, selectedXcode: string): string | null {
+  const action = core.getInput('action')
   if (semver.gte(selectedXcode, '12.5.0')) {
     return action
   } else if (platform == 'watchOS' && actionIsTestable(action)) {
-    core.warning("Setting `action=build` for Apple Watch / Xcode <12.5")
+    core.info("Setting `action=build` for Apple Watch / Xcode <12.5")
     return 'build'
   } else {
-    return action
+    return action || null
   }
 }
 
-const actionIsTestable = (action: string) => action == 'test' || action == 'build-for-testing'
+const actionIsTestable = (action: string | null) => action == 'test' || action == 'build-for-testing'
 
 export async function getDestination(platform: string): Promise<string[]> {
   switch (platform.trim()) {

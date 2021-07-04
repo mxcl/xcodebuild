@@ -68,6 +68,8 @@ jobs:
           configuration: release    # no default, ie. `xcodebuild` decides itself
 ```
 
+> † check out https://devhints.io/semver for valid constraints
+
 ```yaml
 jobs:
   build:
@@ -115,7 +117,18 @@ jobs:
           swift: ${{ matrix.swift }}
 ```
 
-> † check out https://devhints.io/semver for valid constraints
+You *can* use this action to just select Xcode and perform no action:
+
+```yaml
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    steps:
+      - use: mxcl/xcodebuild@v1
+        with:
+          action: none
+      - run: … # do your own thing
+```
 
 ## Available Xcodes
 
