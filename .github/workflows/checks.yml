@@ -19,6 +19,22 @@ jobs:
         with:
           working-directory: fixtures/debug
 
+  null-none-action:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        action:
+          - null  # treated as '' by GHA’s parser
+          - ~     # treated as '' by GHA’s parser
+          - ''
+          - none
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          working-directory: fixtures/debug
+          action: ${{ matrix.action }}
+
   configurations:
     runs-on: macos-latest
     strategy:

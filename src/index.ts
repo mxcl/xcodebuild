@@ -75,9 +75,12 @@ async function run() {
 
 //// helper funcs
 
-  async function xcodebuild(action: string, scheme: string | undefined): Promise<void> {
+  async function xcodebuild(action: string | null, scheme: string | undefined): Promise<void> {
+    if (action === 'none') return
+
     try {
-      core.startGroup(`\`xcodebuild ${action}\``)
+      const title = ['xcodebuild', action].filter(x=>x).join(' ')
+      core.startGroup(`\`${title}\``)
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
       if (verbosity() == 'quiet') args.push('-quiet')
@@ -97,7 +100,7 @@ async function run() {
         break
       }
 
-      args.push(action)
+      if (action) args.push(action)
 
       await xcodebuildX(args, xcpretty)
     } finally {

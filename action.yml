@@ -20,8 +20,12 @@ inputs:
     required: false
   action:
     description: |
-      The most common actions are `test`, `build`.
-      See the `xcodebuild` manual for available actions.
+      * The most common actions are `test`, `build`.
+      * See the `xcodebuild` manual for available actions.
+      * Specifying `none` skips the explicit `xcodebuild` step allowing you
+        to use this (GitHub) Action solely for selecting an Xcode version.
+      * Specifying `''`, `null` or `~` will cause xcodebuild to behave as it
+        does without an action specified (usually `build`)
     required: false
     default: test
   code-coverage:
