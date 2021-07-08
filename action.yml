@@ -40,6 +40,11 @@ inputs:
       Typically `Release` or `Debug`.
       Leave unset and `xcodebuild` decides itself.
     required: false
+  scheme:
+    description: |
+      A scheme defined by an Xcode project or workspace.
+      If not specified, xcodebuild builds only the first target.
+    required: false
   warnings-as-errors:
     description: Fails the build if any warnings in *non test targets*.
     required: false
