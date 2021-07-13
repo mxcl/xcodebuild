@@ -130,6 +130,14 @@ jobs:
       - run: … # do your own thing
 ```
 
+## Specifying `scheme`
+
+You can specify `scheme`.
+If you don’t we try to figure it out for you; this sometimes fails.
+
+Ideally if there is only one scheme you wouldn’t need to specify it,
+if you think we could have figured it out but didn’t please open a ticket.
+
 ## Available Xcodes
 
 GitHub’s images have a **limited selection** of Xcodes.
