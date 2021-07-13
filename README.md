@@ -219,7 +219,6 @@ This action does not support Linux.
 1. Run `npm install`
 1. Edit the various `.ts` files
 1. Run `npm run prepare`
-1. Test with `npm test`
 1. Create a [Pull Request](https://github.com/mxcl/xcodebuild/compare)
 
 

@@ -110,6 +110,11 @@ async function run() {
 
   //NOTE this is not nearly clever enough I think
   async function getScheme(): Promise<string | undefined> {
+    const scheme = core.getInput('scheme')
+    if (scheme) {
+      return scheme
+    }
+
     if (swiftPM) {
       return await libGetScheme()
     }
