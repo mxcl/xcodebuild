@@ -1,4 +1,4 @@
-import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, verbosity } from './lib'
+import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, getIdentity, verbosity } from './lib'
 import xcodebuildX from './xcodebuild'
 const artifact = require('@actions/artifact');
 import * as core from '@actions/core'
@@ -23,6 +23,7 @@ async function run() {
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
   const destination = await getDestination(platform, selected)
+  const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
 
   core.info(`» Selected Xcode ${selected}`)
@@ -83,6 +84,7 @@ async function run() {
       core.startGroup(`\`${title}\``)
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
+      if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
 
