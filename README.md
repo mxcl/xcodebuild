@@ -229,7 +229,6 @@ This action does not support Linux.
 1. Run `npm run prepare`
 1. Create a [Pull Request](https://github.com/mxcl/xcodebuild/compare)
 
-
 [automated-list]: https://flatgithub.com/mxcl/.github/?filename=versions.json
 [gha-xcode-list]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
 [sinoru/actions-setup-xcode]: https://github.com/sinoru/actions-setup-xcode
