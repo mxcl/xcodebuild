@@ -52,12 +52,14 @@ inputs:
   verbosity:
     description: One of `xcpretty`, `quiet` or `verbose`.
     default: xcpretty
+    required: false
   upload-logs:
     description: |
       One of `always` or `on-failure`.
       Consider `always` if you want access to your coverage-reports.
       Beware that artifacts count against your GitHub Actions storage limits.
     default: on-failure
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
