@@ -32,6 +32,11 @@ inputs:
     description: Enables code coverage
     required: false
     default: 'false'
+  code-sign-identity:
+    description: |
+      Identity to be used for code signing. If your project specifies a
+      `CODE_SIGN_IDENTITY`, this will override it.
+    required: false
   working-directory:
     description: '…'
     required: false

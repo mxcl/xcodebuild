@@ -245,7 +245,7 @@ export async function getDestination(platform: string, xcode: string): Promise<s
     case 'macOS':
       return ['-destination', 'platform=macOS']
     case 'mac-catalyst':
-      return ['-destination', 'platform=macOS,variant=Mac Catalyst', 'CODE_SIGN_IDENTITY=-']
+      return ['-destination', 'platform=macOS,variant=Mac Catalyst']
     case '':
       if (semver.gte(xcode, '13.0.0')) {
         //FIXME should parse output from xcodebuild -showdestinations
@@ -259,6 +259,19 @@ export async function getDestination(platform: string, xcode: string): Promise<s
     default:
       throw new Error(`Invalid platform: ${platform}`)
   }
+}
+
+export function getIdentity(identity: string, platform: string): string | null {
+  if (identity) {
+    return `CODE_SIGN_IDENTITY="${identity}"`
+  }
+
+  if (platform == 'mac-catalyst') {
+    // Disable code signing for Mac Catalyst unless overridden.
+    return 'CODE_SIGN_IDENTITY=-'
+  }
+
+  return null
 }
 
 export {
