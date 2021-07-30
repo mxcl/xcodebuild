@@ -172,6 +172,33 @@ directory.
 
 This behavior cannot currently be disabled, PR welcome.
 
+## Code Signing
+
+```yaml
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - use: mxcl/xcodebuild@v1
+        with:
+          code-sign-certificate: ${{ secrets.CERTIFICATE_BASE64 }}
+          code-sign-certificate-passphrase: ${{ secrets.CERTIFICATE_PASSPHRASE}}
+```
+
+> This feature requires macOS.
+
+A code signing certificate can be installed to the macOS Keychain. It is
+automatically removed from the Keychain in a post action.
+
+To export your certificate from Xcode and Base64 encode it, follow
+[these instructions][export]. Store any secrets, including certificates and
+passphrases, in GitHub as [Encrypted Secrets][secrets].
+
+You may specify a `code-sign-identity` to override any `CODE_SIGN_IDENTITY`
+specified by your project.
+
+To disable code signing, you can specify `code-sign-identity: '-'`.
+
 ## Caveats
 
 * The selected Xcode remains the default Xcode for the image for the duration of
@@ -233,3 +260,5 @@ This action does not support Linux.
 [gha-xcode-list]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
 [sinoru/actions-setup-xcode]: https://github.com/sinoru/actions-setup-xcode
 [img]: https://raw.githubusercontent.com/mxcl/xcodebuild/gh-pages/XCResult.png
+[secrets]: https://docs.github.com/en/actions/reference/encrypted-secrets
+[export]: https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development#creating-secrets-for-your-certificate-and-provisioning-profile
