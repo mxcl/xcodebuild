@@ -32,6 +32,20 @@ inputs:
     description: Enables code coverage
     required: false
     default: 'false'
+  code-sign-certificate:
+    description: |
+      A Base64-encoded certificate to be installed to the macOS Keychain for
+      code signing. It is removed from the keychain in the post action. This
+      certificate should correspond to the `CODE_SIGN_IDENTITY` specified in
+      your project or to the `code-sign-identity` input. Pass this in as a
+      GitHub Encrypted Secret. Requires macOS and
+      `code-sign-certificate-passphrase`.
+    required: false
+  code-sign-certificate-passphrase:
+    description: |
+      The passphrase used to protect the code signing certificate. Pass this in
+      as a GitHub Encrypted Secret.
+    required: false
   code-sign-identity:
     description: |
       Identity to be used for code signing. If your project specifies a
@@ -68,3 +82,5 @@ inputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
+  post: 'dist/index.js'
+  post-if: runner.os == 'macOS'

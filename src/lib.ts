@@ -174,7 +174,7 @@ async function destinations(): Promise<DestinationsResponse> {
   }
 }
 
-async function exec(command: string, args: string[], env?: {[key: string]: string}): Promise<string> {
+async function exec(command: string, args?: string[], env?: {[key: string]: string}): Promise<string> {
   let out = ''
   try {
     await gha_exec.exec(command, args, { listeners: {
@@ -185,7 +185,7 @@ async function exec(command: string, args: string[], env?: {[key: string]: strin
     return out
   } catch (error) {
     // help debug efforts by showing what we ran if there was an error
-    core.info(`» ${command} ${args.join(" \\\n")}`)
+    core.info(`» ${command} ${args ? args.join(" \\\n") : ''}`)
     throw error
   }
 }
@@ -272,6 +272,59 @@ export function getIdentity(identity: string, platform: string): string | null {
   }
 
   return null
+}
+
+export async function createKeychain(certificate: string, passphrase: string) {
+  // The user should have already stored these as encrypted secrets, but we'll be paranoid on their behalf.
+  core.setSecret(certificate)
+  core.setSecret(passphrase)
+
+  // Avoid using a well-known password.
+  const password = await exec('/usr/bin/uuidgen')
+  core.setSecret(password)
+
+  // Avoid using well-known paths.
+  const name = await exec('/usr/bin/uuidgen')
+  core.setSecret(name)
+
+  // Unfortunately, a keychain must be stored on disk. We remove it in a post action that calls deleteKeychain.
+  const keychainPath = `${process.env.RUNNER_TEMP}/${name}.keychain-db`
+  core.saveState('keychainPath', keychainPath)
+
+  core.info('Creating keychain')
+  spawn('/usr/bin/security', ['create-keychain', '-p', password, keychainPath])
+  spawn('/usr/bin/security', ['set-keychain-settings', '-lut', '21600', keychainPath])
+  spawn('/usr/bin/security', ['unlock-keychain', '-p', password, keychainPath])
+
+  // Unfortunately, a certificate must be stored on disk in order to be imported. We remove it immediately after import.
+  const certificatePath = `${process.env.RUNNER_TEMP}/${name}.p12`
+  core.info('Importing certificate')
+  fs.writeFileSync(certificatePath, certificate, { encoding: 'base64' })
+  try {
+    spawn(
+      '/usr/bin/security',
+      ['import', certificatePath, '-P', passphrase, '-A', '-t', 'cert', '-f', 'pkcs12', '-k', keychainPath]
+    )
+  } finally {
+    fs.unlinkSync(certificatePath)
+  }
+
+  // This is necessary for Xcode to find the imported certificate.
+  spawn('/usr/bin/security', ['list-keychain', '-d', 'user', '-s', keychainPath])
+}
+
+export async function deleteKeychain() {
+  const keychainPath = core.getState('keychainPath')
+  if (!keychainPath) return
+
+  core.info('Deleting keychain')
+  try {
+    spawn('/usr/bin/security', ['delete-keychain', keychainPath])
+  } finally {
+    if (fs.existsSync(keychainPath)) {
+      fs.unlinkSync(keychainPath)
+    }
+  }
 }
 
 export {

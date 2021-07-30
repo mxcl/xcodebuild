@@ -1,4 +1,4 @@
-import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, getIdentity, verbosity } from './lib'
+import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, getIdentity, createKeychain, deleteKeychain, verbosity } from './lib'
 import xcodebuildX from './xcodebuild'
 const artifact = require('@actions/artifact');
 import * as core from '@actions/core'
@@ -33,6 +33,8 @@ async function run() {
     generateXcodeproj(reason)
   }
 
+  await configureKeychain()
+
   await build(await getScheme())
 
   if (core.getInput('upload-logs') == 'always') {
@@ -65,6 +67,27 @@ async function run() {
     } finally {
       core.endGroup()
     }
+  }
+
+  async function configureKeychain() {
+    const certificate = core.getInput('code-sign-certificate')
+    if (!certificate) return
+
+    if (process.env.RUNNER_OS != 'macOS') {
+      throw new Error('code-sign-certificate requires macOS.')
+    }
+
+    const passphrase = core.getInput('code-sign-certificate-passphrase')
+    if (!passphrase) {
+      throw new Error('code-sign-certificate requires code-sign-certificate-passphrase.')
+    }
+
+    await core.group(
+      'Configuring code signing',
+      async function() {
+        await createKeychain(certificate, passphrase)
+      }
+    )
   }
 
   async function build(scheme: string | undefined) {
@@ -123,26 +146,45 @@ async function run() {
   }
 }
 
-run().catch(async e => {
+async function post() {
+  await deleteKeychain()
+}
+
+async function main() {
+  const isPost = Boolean(core.getState('isPost'))
+  if (isPost) {
+    return await post()
+  } else {
+    core.saveState('isPost', true)
+  }
+
+  try {
+    await run()
+  } catch (error) {
+    await uploadLogs()
+
+    const id = `${process.env.GITHUB_RUN_ID}`
+    const slug = process.env.GITHUB_REPOSITORY
+    const href = `https://github.com/${slug}/actions/runs/${id}#artifact`
+
+    core.warning(`
+      We feel you.
+      CI failures suck.
+      Download the \`.xcresult\` files we just artifact’d.
+      They *really* help diagnose what went wrong!
+      ${href}
+      `.replace(/\s+/g, ' '))
+
+    throw error
+  }
+}
+
+main().catch(async e => {
   core.setFailed(e)
 
   if (e instanceof SyntaxError && e.stack) {
     core.error(e.stack)
   }
-
-  await uploadLogs()
-
-  const id = `${process.env.GITHUB_RUN_ID}`
-  const slug = process.env.GITHUB_REPOSITORY
-  const href = `https://github.com/${slug}/actions/runs/${id}#artifact`
-
-  core.warning(`
-    We feel you.
-    CI failures suck.
-    Download the \`.xcresult\` files we just artifact’d.
-    They *really* help diagnose what went wrong!
-    ${href}
-    `.replace(/\s+/g, ' '))
 })
 
 async function uploadLogs() {
