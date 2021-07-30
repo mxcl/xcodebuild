@@ -268,6 +268,7 @@ export function getIdentity(identity: string, platform: string): string | null {
 
   if (platform == 'mac-catalyst') {
     // Disable code signing for Mac Catalyst unless overridden.
+    core.info('Disabling code signing for Mac Catalyst.')
     return 'CODE_SIGN_IDENTITY=-'
   }
 
