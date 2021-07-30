@@ -10,7 +10,7 @@ import { basename, extname, join } from 'path'
 //TODO we also need to set the right flags for other languages
 const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
 
-async function run() {
+async function main() {
   const cwd = core.getInput('working-directory')
   if (cwd) {
     process.chdir(cwd)
@@ -150,7 +150,10 @@ async function post() {
   await deleteKeychain()
 }
 
-async function main() {
+async function run() {
+  // We use the same entry point for `main` and `post` in action.yml in order to
+  // avoid duplicating common logic. To differentiate at runtime, we set some
+  // state in `main` for `post` to read.
   const isPost = Boolean(core.getState('isPost'))
   if (isPost) {
     return await post()
@@ -159,7 +162,7 @@ async function main() {
   }
 
   try {
-    await run()
+    await main()
   } catch (error) {
     await uploadLogs()
 
@@ -179,7 +182,7 @@ async function main() {
   }
 }
 
-main().catch(async e => {
+run().catch(async e => {
   core.setFailed(e)
 
   if (e instanceof SyntaxError && e.stack) {
