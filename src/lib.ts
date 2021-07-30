@@ -303,7 +303,7 @@ export async function createKeychain(certificate: string, passphrase: string) {
   try {
     spawn(
       '/usr/bin/security',
-      ['import', certificatePath, '-P', passphrase, '-A', '-t', 'cert', '-f', 'pkcs12', '-k', keychainPath]
+      ['import', certificatePath, '-P', passphrase, '-A', '-t', 'cert', '-f', 'pkcs12', '-x', '-k', keychainPath]
     )
   } finally {
     fs.unlinkSync(certificatePath)
