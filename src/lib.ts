@@ -235,7 +235,7 @@ export function getAction(platform: Platform, selectedXcode: string): string | n
 
 const actionIsTestable = (action: string | null) => action == 'test' || action == 'build-for-testing'
 
-export async function getDestination(platform: string): Promise<string[]> {
+export async function getDestination(platform: string, xcode: string): Promise<string[]> {
   switch (platform.trim()) {
     case 'iOS':
     case 'tvOS':
@@ -247,7 +247,15 @@ export async function getDestination(platform: string): Promise<string[]> {
     case 'mac-catalyst':
       return ['-destination', 'platform=macOS,variant=Mac Catalyst', 'CODE_SIGN_IDENTITY=-']
     case '':
-      return []
+      if (semver.gte(xcode, '13.0.0')) {
+        //FIXME should parse output from xcodebuild -showdestinations
+        //NOTE `-json` doesn’t work
+        // eg. the Package.swift could only allow iOS, assuming macOS is going to work OFTEN
+        // but not ALWAYS
+        return ['-destination', 'platform=macOS']
+      } else {
+        return []
+      }
     default:
       throw new Error(`Invalid platform: ${platform}`)
   }
