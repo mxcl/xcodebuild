@@ -5,11 +5,14 @@ on:
       - 'fixtures/**/*.swift'
       - .github/workflows/checks.yml
       - dist/*
-    schedule:
-      - cron: '3 3 * * 5'  # 3:03 AM, every Friday
+  schedule:
+    - cron: '3 3 * * 5'  # 3:03 AM, every Friday
+  workflow_dispatch:
+
 concurrency:
   group: ${{ github.head_ref || 'cron' }}
   cancel-in-progress: true
+
 jobs:
   defaults:
     runs-on: macos-latest
