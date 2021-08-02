@@ -1,9 +1,9 @@
-import { spawn } from "child_process"
+import { spawn } from 'child_process'
 import * as core from '@actions/core'
 
 type SpawnResult = number | NodeJS.Signals | null
 
-async function xcodebuild(args: string[], xcpretty: boolean): Promise<void> {
+export default async function xcodebuild(args: string[], xcpretty: boolean): Promise<void> {
   const xcodebuild = spawn('xcodebuild', args, { stdio: [
     'inherit',
     xcpretty ? 'pipe' : 'inherit',
@@ -33,5 +33,3 @@ async function xcodebuild(args: string[], xcpretty: boolean): Promise<void> {
     throw new Error(`\`xcodebuild\` aborted (${status})`)
   }
 }
-
-export default xcodebuild

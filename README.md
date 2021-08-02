@@ -53,7 +53,7 @@ jobs:
           - tvOS
           - iOS
         xcode:
-          - ^10  # a semantically versioned constraint †
+          - ^10  # a semantic version range †
           - ^11
           - ^12
     runs-on: macos-10.15
@@ -68,7 +68,7 @@ jobs:
           configuration: release    # no default, ie. `xcodebuild` decides itself
 ```
 
-> † check out https://devhints.io/semver for valid constraints
+> † check out https://devhints.io/semver for valid ranges
 
 ```yaml
 jobs:
@@ -85,7 +85,7 @@ jobs:
         with:
           swift: ${{ matrix.swift }}
           # ^^ mxcl/xcodebuild selects the newest Xcode that provides the requested Swift
-          # obviously don’t specify an Xcode constraint *as well*
+          # obviously don’t specify an Xcode range *as well*
         continue-on-error: ${{ matrix.swift == '^6' }}
         # ^^ pre-emptively try to build against unreleased versions
 ```

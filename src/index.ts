@@ -1,11 +1,10 @@
-import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, getIdentity, createKeychain, deleteKeychain, verbosity } from './lib'
+import { actionIsTestable, createKeychain, deleteKeychain, getAction, getConfiguration, getDestination, getIdentity, getSchemeFromPackage, Platform, spawn, verbosity, xcselect } from './lib'
 import xcodebuildX from './xcodebuild'
-import artifact from '@actions/artifact';
+import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
-import { existsSync } from 'fs'
-import * as semver from 'semver'
 import * as fs from 'fs'
-import { basename, extname, join } from 'path'
+import * as path from 'path'
+import semver, { Range } from 'semver'
 
 //TODO we also need to set the right flags for other languages
 const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
@@ -16,13 +15,13 @@ async function main() {
     process.chdir(cwd)
   }
 
-  const swiftPM = existsSync('Package.swift')
-  const platform = core.getInput('platform') as Platform
-  const selected = await xcselect(core.getInput('xcode'), core.getInput('swift'))
-  const action = getAction(platform, selected)
+  const swiftPM = fs.existsSync('Package.swift')
+  const platform = getPlatformInput('platform')
+  const selected = await xcselect(getRangeInput('xcode'), getRangeInput('swift'))
+  const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(platform, selected)
+  const destination = await getDestination(selected, platform)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
 
@@ -42,6 +41,26 @@ async function main() {
   }
 
 //// immediate funcs
+
+  function getPlatformInput(input: string) : Platform | undefined {
+    const value = core.getInput(input)
+    if (!value) return undefined
+    try {
+      return value as Platform
+    } catch (error) {
+      throw new Error(`failed to parse platform from '${value}': ${error}`)
+    }
+  }
+
+  function getRangeInput(input: string) : Range | undefined {
+    const value = core.getInput(input)
+    if (!value) return undefined
+    try {
+      return new Range(value)
+    } catch (error) {
+      throw new Error(`failed to parse semantic version range from '${value}': ${error}`)
+    }
+  }
 
   function shouldGenerateXcodeproj(): string | false {
     if (!swiftPM) return false
@@ -91,7 +110,7 @@ async function main() {
     )
   }
 
-  async function build(scheme: string | undefined) {
+  async function build(scheme?: string) {
     if (warningsAsErrors && actionIsTestable(action)) {
       await xcodebuild('build', scheme)
     }
@@ -100,7 +119,7 @@ async function main() {
 
 //// helper funcs
 
-  async function xcodebuild(action: string | null, scheme: string | undefined): Promise<void> {
+  async function xcodebuild(action?: string, scheme?: string): Promise<void> {
     if (action === 'none') return
 
     try {
@@ -142,7 +161,7 @@ async function main() {
     }
 
     if (swiftPM) {
-      return await libGetScheme()
+      return await getSchemeFromPackage()
     }
   }
 }
@@ -192,15 +211,14 @@ run().catch(async e => {
 })
 
 async function uploadLogs() {
-  const getFiles: (path: string) => string[] = path => fs.readdirSync(path)
-    .map(file => join(path, file))
-    .flatMap(path => fs.lstatSync(path).isDirectory() ? getFiles(path) : [path])
+  const getFiles: (directory: string) => string[] = directory => fs.readdirSync(directory)
+    .map(entry => path.join(directory, entry))
+    .flatMap(entry => fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry])
 
   try {
     core.startGroup('Uploading Logs')
 
-    const xcresults = fs.readdirSync('.').filter(path => extname(path) == '.xcresult')
-
+    const xcresults = fs.readdirSync('.').filter(entry => path.extname(entry) == '.xcresult')
     if (xcresults.length === 0) {
       core.warning("strange… no `.xcresult` bundles found")
     }
@@ -211,7 +229,7 @@ async function uploadLogs() {
       // https://github.community/t/add-build-number/16149/17
       const nonce = Math.random().toString(36).replace(/[^a-zA-Z0-9]+/g, '').substr(0, 6)
 
-      const base = basename(xcresult, '.xcresult')
+      const base = path.basename(xcresult, '.xcresult')
       const name = `${base}#${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
       await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
     }
