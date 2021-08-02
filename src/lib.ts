@@ -28,7 +28,7 @@ async function xcodes() {
   return rv
 }
 
-function spawn(arg0: string, args: string[], options: SpawnSyncOptions = {stdio: 'inherit'}) {
+function spawn(arg0: string, args: string[], options: SpawnSyncOptions = {stdio: 'inherit'}): void {
   const { error, signal, status } = spawnSync(arg0, args, options)
   if (error) throw error
   if (signal) throw new Error(`\`${arg0}\` terminated with signal (${signal})`)
@@ -36,14 +36,14 @@ function spawn(arg0: string, args: string[], options: SpawnSyncOptions = {stdio:
 }
 
 async function xcselect(xcode: string | undefined, swift: string | undefined): Promise<string> {
-
-  let gotDotSwiftVersion: string | undefined
-
   if (swift) {
     return await selectSwift(swift)
   } else if (xcode) {
     return await selectXcode(xcode)
-  } else if (gotDotSwiftVersion = dotSwiftVersion()) {
+  }
+
+  const gotDotSwiftVersion = dotSwiftVersion()
+  if (gotDotSwiftVersion) {
     core.info(`» \`.swift-version\` » ~> ${gotDotSwiftVersion}`)
     return await selectSwift(gotDotSwiftVersion)
   } else {
@@ -63,7 +63,7 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
   }
 
   async function selectXcode(constraint?: string) {
-    const rv = (await xcodes()).filter(([path, v]) =>
+    const rv = (await xcodes()).filter(([, v]) =>
       constraint ? semver.satisfies(v, constraint) : true
     ).sort((a,b) =>
       semver.compare(a[1], b[1])
@@ -118,11 +118,19 @@ interface Devices {
 
 type DeviceType = 'watchOS' | 'tvOS' | 'iOS'
 type DestinationsResponse = {[key: string]: string}
+type ListResponse = {
+  workspace?: {
+    schemes: string[]
+  }
+  project?: {
+    schemes: string[]
+  }
+}
 
 async function scheme(): Promise<string> {
   const out = await exec('xcodebuild', ['-list', '-json'])
   const json = parseJSON(out)
-  const schemes = (json?.workspace ?? json?.project)?.schemes as string[]
+  const schemes = (json?.workspace ?? json?.project)?.schemes
   if (!schemes || schemes.length == 0) throw new Error('Could not determine scheme')
   for (const scheme of schemes) {
     if (scheme.endsWith('-Package')) return scheme
@@ -130,7 +138,7 @@ async function scheme(): Promise<string> {
   return schemes[0]
 }
 
-export function parseJSON(input: string) {
+export function parseJSON(input: string): ListResponse {
   try {
     input = input.trim()
     // works around xcodebuild sometimes outputting this string in CI conditions
@@ -207,7 +215,7 @@ function verbosity(): 'xcpretty' | 'quiet' | 'verbose' {
   }
 }
 
-function getConfiguration() {
+function getConfiguration(): string {
   const conf = core.getInput('configuration')
   switch (conf) {
     // both `.xcodeproj` and SwiftPM projects capitalize these
@@ -234,15 +242,17 @@ export function getAction(platform: Platform, selectedXcode: string): string | n
   }
 }
 
-const actionIsTestable = (action: string | null) => action == 'test' || action == 'build-for-testing'
+const actionIsTestable = (action: string | null): boolean => action == 'test' || action == 'build-for-testing'
 
 export async function getDestination(platform: string, xcode: string): Promise<string[]> {
   switch (platform.trim()) {
     case 'iOS':
     case 'tvOS':
     case 'watchOS':
-      const id = (await destinations())[platform]
-      return ['-destination', `id=${id}`]
+      {
+        const id = (await destinations())[platform]
+        return ['-destination', `id=${id}`]
+      }
     case 'macOS':
       return ['-destination', 'platform=macOS']
     case 'mac-catalyst':
@@ -278,8 +288,8 @@ export function getIdentity(identity: string, platform: string): string | null {
 
 // In order to avoid exposure to command line audit logging, we pass commands in
 // via stdin. We allow only one command at a time in an effort to avoid injection.
-function security(...args: string[]) {
-  for (var arg of args) {
+function security(...args: string[]): void {
+  for (const arg of args) {
     if (arg.includes('\n')) throw new Error('Invalid security argument')
   }
 
@@ -287,7 +297,7 @@ function security(...args: string[]) {
   spawn('/usr/bin/security', ['-i'], { input: command })
 }
 
-export async function createKeychain(certificate: string, passphrase: string) {
+export async function createKeychain(certificate: string, passphrase: string): Promise<void> {
   // The user should have already stored these as encrypted secrets, but we'll be paranoid on their behalf.
   core.setSecret(certificate)
   core.setSecret(passphrase)
@@ -328,7 +338,7 @@ export async function createKeychain(certificate: string, passphrase: string) {
   security('list-keychains', '-d', 'user', '-s', keychainPath, ...keychainSearchPath)
 }
 
-export async function deleteKeychain() {
+export async function deleteKeychain(): Promise<void> {
   const state = core.getState('keychainSearchPath')
   if (state) {
     const keychainSearchPath: string[] = JSON.parse(state)

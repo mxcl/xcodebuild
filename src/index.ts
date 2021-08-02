@@ -1,6 +1,6 @@
 import { scheme as libGetScheme, spawn, xcselect, getConfiguration, actionIsTestable, getAction, Platform, getDestination, getIdentity, createKeychain, deleteKeychain, verbosity } from './lib'
 import xcodebuildX from './xcodebuild'
-const artifact = require('@actions/artifact');
+import artifact from '@actions/artifact';
 import * as core from '@actions/core'
 import { existsSync } from 'fs'
 import * as semver from 'semver'
@@ -28,8 +28,8 @@ async function main() {
 
   core.info(`» Selected Xcode ${selected}`)
 
-  let reason: string | undefined | false
-  if (reason = shouldGenerateXcodeproj()) {
+  const reason: string | false = shouldGenerateXcodeproj()
+  if (reason) {
     generateXcodeproj(reason)
   }
 
@@ -43,7 +43,7 @@ async function main() {
 
 //// immediate funcs
 
-  function shouldGenerateXcodeproj(): string | false | undefined {
+  function shouldGenerateXcodeproj(): string | false {
     if (!swiftPM) return false
     if (platform == 'watchOS' && semver.lt(selected, '12.5.0')) {
       // watchOS prior to 12.4 will fail to `xcodebuild` a SwiftPM project
@@ -57,6 +57,7 @@ async function main() {
       //TODO only do this if there are test targets
       return '`warningsAsErrors` is set'
     }
+    return false
   }
 
   function generateXcodeproj(reason: string) {

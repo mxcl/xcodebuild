@@ -3,7 +3,7 @@ import * as core from '@actions/core'
 
 type SpawnResult = number | NodeJS.Signals | null
 
-async function xcodebuild(args: string[], xcpretty: boolean) {
+async function xcodebuild(args: string[], xcpretty: boolean): Promise<void> {
   const xcodebuild = spawn('xcodebuild', args, { stdio: [
     'inherit',
     xcpretty ? 'pipe' : 'inherit',
