@@ -131,7 +131,7 @@ async function main() {
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
 
-      args = args.concat(['-resultBundlePath', `${action}`])
+      args = args.concat(['-resultBundlePath', `${action ?? 'xcodebuild'}.xcresult`])
 
       switch (action) {
       case 'build':
