@@ -22,7 +22,7 @@ async function run() {
   const action = getAction(platform, selected)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(platform)
+  const destination = await getDestination(platform, selected)
   const xcpretty = verbosity() == 'xcpretty'
 
   core.info(`» Selected Xcode ${selected}`)
