@@ -1,7 +1,7 @@
 {
   "scripts": {
     "build": "tsc",
-    "prepare": "npx eslint . && ncc build src/index.ts --minify --source-map"
+    "prepare": "eslint . && ncc build src/index.ts --minify --source-map"
   },
   "dependencies": {
     "@actions/artifact": "^0.5.2",
