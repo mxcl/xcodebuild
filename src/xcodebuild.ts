@@ -3,12 +3,13 @@ import * as core from '@actions/core'
 
 type SpawnResult = number | NodeJS.Signals | null
 
-export default async function xcodebuild(args: string[], xcpretty: boolean): Promise<void> {
-  const xcodebuild = spawn('xcodebuild', args, { stdio: [
-    'inherit',
-    xcpretty ? 'pipe' : 'inherit',
-    'inherit'
-  ]})
+export default async function xcodebuild(
+  args: string[],
+  xcpretty: boolean
+): Promise<void> {
+  const xcodebuild = spawn('xcodebuild', args, {
+    stdio: ['inherit', xcpretty ? 'pipe' : 'inherit', 'inherit'],
+  })
 
   let promise = new Promise<SpawnResult>((fulfill, reject) => {
     xcodebuild.on('error', reject)
@@ -16,14 +17,21 @@ export default async function xcodebuild(args: string[], xcpretty: boolean): Pro
   })
 
   if (xcpretty) {
-    const xcpretty = spawn('xcpretty', { stdio: ['pipe', process.stdout, 'inherit'] })
+    const xcpretty = spawn('xcpretty', {
+      stdio: ['pipe', process.stdout, 'inherit'],
+    })
 
     xcodebuild.stdout?.pipe(xcpretty.stdin)
 
-    promise = promise.then(status0 => new Promise<SpawnResult>((fulfill, reject) => {
-      xcpretty.on('error', reject)
-      xcpretty.on('exit', (status, signal) => fulfill(status0 ?? status ?? signal))
-    }))
+    promise = promise.then(
+      (status0) =>
+        new Promise<SpawnResult>((fulfill, reject) => {
+          xcpretty.on('error', reject)
+          xcpretty.on('exit', (status, signal) =>
+            fulfill(status0 ?? status ?? signal)
+          )
+        })
+    )
   }
 
   const status = await promise

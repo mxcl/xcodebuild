@@ -1,4 +1,17 @@
-import { actionIsTestable, createKeychain, deleteKeychain, getAction, getConfiguration, getDestination, getIdentity, getSchemeFromPackage, Platform, spawn, verbosity, xcselect } from './lib'
+import {
+  actionIsTestable,
+  createKeychain,
+  deleteKeychain,
+  getAction,
+  getConfiguration,
+  getDestination,
+  getIdentity,
+  getSchemeFromPackage,
+  Platform,
+  spawn,
+  verbosity,
+  xcselect,
+} from './lib'
 import xcodebuildX from './xcodebuild'
 import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
@@ -17,7 +30,10 @@ async function main() {
 
   const swiftPM = fs.existsSync('Package.swift')
   const platform = getPlatformInput('platform')
-  const selected = await xcselect(getRangeInput('xcode'), getRangeInput('swift'))
+  const selected = await xcselect(
+    getRangeInput('xcode'),
+    getRangeInput('swift')
+  )
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
@@ -40,9 +56,9 @@ async function main() {
     await uploadLogs()
   }
 
-//// immediate funcs
+  //// immediate funcs
 
-  function getPlatformInput(input: string) : Platform | undefined {
+  function getPlatformInput(input: string): Platform | undefined {
     const value = core.getInput(input)
     if (!value) return undefined
     try {
@@ -52,13 +68,15 @@ async function main() {
     }
   }
 
-  function getRangeInput(input: string) : Range | undefined {
+  function getRangeInput(input: string): Range | undefined {
     const value = core.getInput(input)
     if (!value) return undefined
     try {
       return new Range(value)
     } catch (error) {
-      throw new Error(`failed to parse semantic version range from '${value}': ${error}`)
+      throw new Error(
+        `failed to parse semantic version range from '${value}': ${error}`
+      )
     }
   }
 
@@ -80,7 +98,7 @@ async function main() {
   }
 
   function generateXcodeproj(reason: string) {
-    core.group('Generating `.xcodeproj`', async function() {
+    core.group('Generating `.xcodeproj`', async function () {
       core.info(`Generating \`.xcodeproj\` ∵ ${reason}`)
       spawn('swift', ['package', 'generate-xcodeproj'])
     })
@@ -96,10 +114,12 @@ async function main() {
 
     const passphrase = core.getInput('code-sign-certificate-passphrase')
     if (!passphrase) {
-      throw new Error('code-sign-certificate requires code-sign-certificate-passphrase.')
+      throw new Error(
+        'code-sign-certificate requires code-sign-certificate-passphrase.'
+      )
     }
 
-    await core.group('Configuring code signing', async function() {
+    await core.group('Configuring code signing', async function () {
       await createKeychain(certificate, passphrase)
     })
   }
@@ -111,31 +131,34 @@ async function main() {
     await xcodebuild(action, scheme)
   }
 
-//// helper funcs
+  //// helper funcs
 
   async function xcodebuild(action?: string, scheme?: string): Promise<void> {
     if (action === 'none') return
 
-    const title = ['xcodebuild', action].filter(x=>x).join(' ')
-    core.group(title, async function() {
+    const title = ['xcodebuild', action].filter((x) => x).join(' ')
+    core.group(title, async function () {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
 
-      args = args.concat(['-resultBundlePath', `${action ?? 'xcodebuild'}.xcresult`])
+      args = args.concat([
+        '-resultBundlePath',
+        `${action ?? 'xcodebuild'}.xcresult`,
+      ])
 
       switch (action) {
-      case 'build':
-        if (warningsAsErrors) args.push(warningsAsErrorsFlags)
-        break
-      case 'test':
-      case 'build-for-testing':
-        if (core.getBooleanInput('code-coverage')) {
-          args = args.concat(['-enableCodeCoverage', 'YES'])
-        }
-        break
+        case 'build':
+          if (warningsAsErrors) args.push(warningsAsErrorsFlags)
+          break
+        case 'test':
+        case 'build-for-testing':
+          if (core.getBooleanInput('code-coverage')) {
+            args = args.concat(['-enableCodeCoverage', 'YES'])
+          }
+          break
       }
 
       if (action) args.push(action)
@@ -181,19 +204,21 @@ async function run() {
     const slug = process.env.GITHUB_REPOSITORY
     const href = `https://github.com/${slug}/actions/runs/${id}#artifact`
 
-    core.warning(`
+    core.warning(
+      `
       We feel you.
       CI failures suck.
       Download the \`.xcresult\` files we just artifact’d.
       They *really* help diagnose what went wrong!
       ${href}
-      `.replace(/\s+/g, ' '))
+      `.replace(/\s+/g, ' ')
+    )
 
     throw error
   }
 }
 
-run().catch(async e => {
+run().catch(async (e) => {
   core.setFailed(e)
 
   if (e instanceof SyntaxError && e.stack) {
@@ -202,20 +227,29 @@ run().catch(async e => {
 })
 
 async function uploadLogs() {
-  const getFiles: (directory: string) => string[] = directory => fs.readdirSync(directory)
-    .map(entry => path.join(directory, entry))
-    .flatMap(entry => fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry])
+  const getFiles: (directory: string) => string[] = (directory) =>
+    fs
+      .readdirSync(directory)
+      .map((entry) => path.join(directory, entry))
+      .flatMap((entry) =>
+        fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry]
+      )
 
-  core.group('Uploading Logs', async function() {
-    const xcresults = fs.readdirSync('.').filter(entry => path.extname(entry) == '.xcresult')
+  core.group('Uploading Logs', async function () {
+    const xcresults = fs
+      .readdirSync('.')
+      .filter((entry) => path.extname(entry) == '.xcresult')
     if (xcresults.length === 0) {
-      core.warning("strange… no `.xcresult` bundles found")
+      core.warning('strange… no `.xcresult` bundles found')
     }
 
     for (const xcresult of xcresults) {
       // random part because GitHub doesn’t yet expose any kind of per-job, per-matrix ID
       // https://github.community/t/add-build-number/16149/17
-      const nonce = Math.random().toString(36).replace(/[^a-zA-Z0-9]+/g, '').substr(0, 6)
+      const nonce = Math.random()
+        .toString(36)
+        .replace(/[^a-zA-Z0-9]+/g, '')
+        .substr(0, 6)
 
       const base = path.basename(xcresult, '.xcresult')
       const name = `${base}#${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
