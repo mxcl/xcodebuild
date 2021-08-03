@@ -97,8 +97,8 @@ async function main() {
     return false
   }
 
-  function generateXcodeproj(reason: string) {
-    core.group('Generating `.xcodeproj`', async function () {
+  async function generateXcodeproj(reason: string) {
+    await core.group('Generating `.xcodeproj`', async () => {
       core.info(`Generating \`.xcodeproj\` ∵ ${reason}`)
       spawn('swift', ['package', 'generate-xcodeproj'])
     })
@@ -119,7 +119,7 @@ async function main() {
       )
     }
 
-    await core.group('Configuring code signing', async function () {
+    await core.group('Configuring code signing', async () => {
       await createKeychain(certificate, passphrase)
     })
   }
@@ -133,11 +133,11 @@ async function main() {
 
   //// helper funcs
 
-  async function xcodebuild(action?: string, scheme?: string): Promise<void> {
+  async function xcodebuild(action?: string, scheme?: string) {
     if (action === 'none') return
 
     const title = ['xcodebuild', action].filter((x) => x).join(' ')
-    core.group(title, async function () {
+    await core.group(title, async () => {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
       if (identity) args = args.concat(identity)
@@ -235,7 +235,7 @@ async function uploadLogs() {
         fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry]
       )
 
-  core.group('Uploading Logs', async function () {
+  await core.group('Uploading Logs', async () => {
     const xcresults = fs
       .readdirSync('.')
       .filter((entry) => path.extname(entry) == '.xcresult')
