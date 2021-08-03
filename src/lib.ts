@@ -155,9 +155,9 @@ function parseJSON<T>(input: string): T {
     }
     return JSON.parse(input) as T
   } catch (error) {
-    core.startGroup("JSON")
-    core.error(input)
-    core.endGroup()
+    core.group("JSON", async function() {
+      core.error(input)
+    })
     throw error
   }
 }

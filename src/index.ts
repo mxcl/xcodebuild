@@ -80,13 +80,10 @@ async function main() {
   }
 
   function generateXcodeproj(reason: string) {
-    try {
-      core.startGroup('Generating `.xcodeproj`')
+    core.group('Generating `.xcodeproj`', async function() {
       core.info(`Generating \`.xcodeproj\` ∵ ${reason}`)
       spawn('swift', ['package', 'generate-xcodeproj'])
-    } finally {
-      core.endGroup()
-    }
+    })
   }
 
   async function configureKeychain() {
@@ -102,12 +99,9 @@ async function main() {
       throw new Error('code-sign-certificate requires code-sign-certificate-passphrase.')
     }
 
-    await core.group(
-      'Configuring code signing',
-      async function() {
-        await createKeychain(certificate, passphrase)
-      }
-    )
+    await core.group('Configuring code signing', async function() {
+      await createKeychain(certificate, passphrase)
+    })
   }
 
   async function build(scheme?: string) {
@@ -122,9 +116,8 @@ async function main() {
   async function xcodebuild(action?: string, scheme?: string): Promise<void> {
     if (action === 'none') return
 
-    try {
-      const title = ['xcodebuild', action].filter(x=>x).join(' ')
-      core.startGroup(`\`${title}\``)
+    const title = ['xcodebuild', action].filter(x=>x).join(' ')
+    core.group(title, async function() {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
       if (identity) args = args.concat(identity)
@@ -148,9 +141,7 @@ async function main() {
       if (action) args.push(action)
 
       await xcodebuildX(args, xcpretty)
-    } finally {
-      core.endGroup()
-    }
+    })
   }
 
   //NOTE this is not nearly clever enough I think
@@ -215,16 +206,13 @@ async function uploadLogs() {
     .map(entry => path.join(directory, entry))
     .flatMap(entry => fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry])
 
-  try {
-    core.startGroup('Uploading Logs')
-
+  core.group('Uploading Logs', async function() {
     const xcresults = fs.readdirSync('.').filter(entry => path.extname(entry) == '.xcresult')
     if (xcresults.length === 0) {
       core.warning("strange… no `.xcresult` bundles found")
     }
 
     for (const xcresult of xcresults) {
-
       // random part because GitHub doesn’t yet expose any kind of per-job, per-matrix ID
       // https://github.community/t/add-build-number/16149/17
       const nonce = Math.random().toString(36).replace(/[^a-zA-Z0-9]+/g, '').substr(0, 6)
@@ -233,7 +221,5 @@ async function uploadLogs() {
       const name = `${base}#${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
       await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
     }
-  } finally {
-    core.endGroup()
-  }
+  })
 }
