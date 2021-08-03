@@ -7,11 +7,11 @@ import {
   getDestination,
   getIdentity,
   getSchemeFromPackage,
-  Platform,
   spawn,
   verbosity,
   xcselect,
 } from './lib'
+import type { Platform } from './lib'
 import xcodebuildX from './xcodebuild'
 import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
@@ -97,11 +97,14 @@ async function main() {
     return false
   }
 
-  async function generateXcodeproj(reason: string) {
-    await core.group('Generating `.xcodeproj`', async () => {
+  function generateXcodeproj(reason: string) {
+    core.startGroup('Generating `.xcodeproj`')
+    try {
       core.info(`Generating \`.xcodeproj\` ∵ ${reason}`)
       spawn('swift', ['package', 'generate-xcodeproj'])
-    })
+    } finally {
+      core.endGroup()
+    }
   }
 
   async function configureKeychain() {
@@ -175,13 +178,13 @@ async function main() {
     }
 
     if (swiftPM) {
-      return await getSchemeFromPackage()
+      return getSchemeFromPackage()
     }
   }
 }
 
-async function post() {
-  await deleteKeychain()
+function post() {
+  deleteKeychain()
 }
 
 async function run() {
@@ -190,7 +193,8 @@ async function run() {
   // state in `main` for `post` to read.
   const isPost = Boolean(core.getState('isPost'))
   if (isPost) {
-    return await post()
+    post()
+    return
   } else {
     core.saveState('isPost', true)
   }
@@ -218,7 +222,7 @@ async function run() {
   }
 }
 
-run().catch(async (e) => {
+run().catch((e) => {
   core.setFailed(e)
 
   if (e instanceof SyntaxError && e.stack) {
