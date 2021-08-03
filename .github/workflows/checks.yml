@@ -6,7 +6,7 @@ on:
       - .github/workflows/checks.yml
       - dist/*
   schedule:
-    - cron: '3 3 * * 5'  # 3:03 AM, every Friday
+    - cron: '3 3 * * 5' # 3:03 AM, every Friday
   workflow_dispatch:
 
 concurrency:
@@ -27,8 +27,8 @@ jobs:
     strategy:
       matrix:
         action:
-          - null  # treated as '' by GHA’s parser
-          - ~     # treated as '' by GHA’s parser
+          - null # treated as '' by GHA’s parser
+          - ~ # treated as '' by GHA’s parser
           - ''
           - none
     steps:
@@ -53,7 +53,7 @@ jobs:
           working-directory: fixtures/${{ matrix.configuration }}
           warnings-as-errors: true
           action: test
-          upload-logs: always  # so we can test this feature
+          upload-logs: always # so we can test this feature
 
   verbosity:
     runs-on: macos-latest
@@ -88,15 +88,15 @@ jobs:
           - swift: ~5.5
             os: macos-11
     steps:
-    - uses: actions/checkout@v2
-    - uses: ./
-      with:
-        swift: ${{ matrix.swift }}
-        working-directory: fixtures/swift/${{ matrix.swift }}
-        action: build
-    - uses: mxcl/get-swift-version@v1
-      with:
-        requires: ${{ matrix.swift }}
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          swift: ${{ matrix.swift }}
+          working-directory: fixtures/swift/${{ matrix.swift }}
+          action: build
+      - uses: mxcl/get-swift-version@v1
+        with:
+          requires: ${{ matrix.swift }}
 
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
@@ -128,17 +128,17 @@ jobs:
             action: test
             warnings-as-errors: false
     steps:
-    - uses: actions/checkout@v2
-    - uses: ./
-      with:
-        platform: ${{ matrix.platform }}
-        xcode: ${{ matrix.xcode }}
-        working-directory: fixtures/${{ matrix.platform }}
-        code-coverage: ${{ matrix.codecov }}
-        action: ${{ matrix.action }}
-        warnings-as-errors: ${{ matrix.warnings-as-errors }}
-    - run: |
-        xcode-select --print-path
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          platform: ${{ matrix.platform }}
+          xcode: ${{ matrix.xcode }}
+          working-directory: fixtures/${{ matrix.platform }}
+          code-coverage: ${{ matrix.codecov }}
+          action: ${{ matrix.action }}
+          warnings-as-errors: ${{ matrix.warnings-as-errors }}
+      - run: |
+          xcode-select --print-path
 
   more-xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}, ${{ matrix.os }})
@@ -160,15 +160,15 @@ jobs:
         warnings-as-errors:
           - false
     steps:
-    - uses: actions/checkout@v2
-    - uses: ./
-      with:
-        platform: ${{ matrix.platform }}
-        xcode: ${{ matrix.xcode }}
-        working-directory: fixtures/${{ matrix.platform }}
-        code-coverage: ${{ matrix.codecov }}
-        action: ${{ matrix.action }}
-        warnings-as-errors: ${{ matrix.warnings-as-errors }}
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          platform: ${{ matrix.platform }}
+          xcode: ${{ matrix.xcode }}
+          working-directory: fixtures/${{ matrix.platform }}
+          code-coverage: ${{ matrix.codecov }}
+          action: ${{ matrix.action }}
+          warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   verify-codecov:
     name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
@@ -187,27 +187,27 @@ jobs:
           - true
           - false
     steps:
-    - uses: actions/checkout@v2
-    - uses: ./
-      with:
-        platform: ${{ matrix.platform }}
-        xcode: ${{ matrix.xcode }}
-        working-directory: fixtures/${{ matrix.platform }}
-        code-coverage: ${{ matrix.codecov }}
-        action: ${{ matrix.action }}
-        warnings-as-errors: ${{ matrix.warnings-as-errors }}
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          platform: ${{ matrix.platform }}
+          xcode: ${{ matrix.xcode }}
+          working-directory: fixtures/${{ matrix.platform }}
+          code-coverage: ${{ matrix.codecov }}
+          action: ${{ matrix.action }}
+          warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   verify-swift-version:
     name: .swift-version
     runs-on: macos-10.15
     steps:
-    - uses: actions/checkout@v2
-    - uses: mxcl/get-swift-version@v1
-      with:
-        requires: '>5.1'
-    - uses: ./
-      with:
-        working-directory: fixtures/dot-swift-version
-    - uses: mxcl/get-swift-version@v1
-      with:
-        requires: ~5.1
+      - uses: actions/checkout@v2
+      - uses: mxcl/get-swift-version@v1
+        with:
+          requires: '>5.1'
+      - uses: ./
+        with:
+          working-directory: fixtures/dot-swift-version
+      - uses: mxcl/get-swift-version@v1
+        with:
+          requires: ~5.1

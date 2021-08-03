@@ -6,11 +6,11 @@ description: >
 inputs:
   xcode:
     description: |
-      A semantic-version, eg. ^10, ~10.3 or 10.3.1
+      A semantic version range, eg. ^10, ~10.3 or 10.3.1
       Leave unset for the image‑default.
     required: false
   swift:
-    description: A semantic-version, eg. ^5, ~5.4 or 5.4.1
+    description: A semantic version range, eg. ^5, ~5.4 or 5.4.1
     required: false
   platform:
     description: |

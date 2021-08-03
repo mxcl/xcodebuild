@@ -1,25 +1,27 @@
+import * as core from '@actions/core'
 import * as gha_exec from '@actions/exec'
 import { spawnSync, SpawnSyncOptions } from 'child_process'
-import semver from 'semver'
-import path from 'path'
-import * as core from '@actions/core'
+import * as path from 'path'
 import * as fs from 'fs'
+import semver, { Range, SemVer } from 'semver'
 
-async function mdls(path: string): Promise<string | undefined> {
+async function mdls(path: string): Promise<SemVer | undefined> {
   const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
   if (core.getInput('verbosity') == 'verbose') {
     // in verbose mode all commands and outputs are printed
     // and mdls in `raw` mode does not terminate its lines
-    process.stdout.write("\n")
+    process.stdout.write('\n')
   }
-  return semver.coerce(v)?.version
+  return semver.coerce(v) ?? undefined
 }
 
-async function xcodes() {
-  const paths = (await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])).split("\n")
-  const rv: [string, string][] = []
+async function xcodes(): Promise<[string, SemVer][]> {
+  const paths = (
+    await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])
+  ).split('\n')
+  const rv: [string, SemVer][] = []
   for (const path of paths) {
-    if (!path.trim()) continue;
+    if (!path.trim()) continue
     const v = await mdls(path)
     if (v) {
       rv.push([path, v])
@@ -28,26 +30,29 @@ async function xcodes() {
   return rv
 }
 
-function spawn(arg0: string, args: string[], options: SpawnSyncOptions = {stdio: 'inherit'}) {
+export function spawn(
+  arg0: string,
+  args: string[],
+  options: SpawnSyncOptions = { stdio: 'inherit' }
+): void {
   const { error, signal, status } = spawnSync(arg0, args, options)
   if (error) throw error
   if (signal) throw new Error(`\`${arg0}\` terminated with signal (${signal})`)
   if (status != 0) throw new Error(`\`${arg0}\` aborted (${status})`)
 }
 
-async function xcselect(xcode: string | undefined, swift: string | undefined): Promise<string> {
-
-  let gotDotSwiftVersion: string | undefined
-
+export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
   if (swift) {
     return await selectSwift(swift)
   } else if (xcode) {
     return await selectXcode(xcode)
-  } else if (gotDotSwiftVersion = dotSwiftVersion()) {
+  }
+
+  const gotDotSwiftVersion = dotSwiftVersion()
+  if (gotDotSwiftVersion) {
     core.info(`» \`.swift-version\` » ~> ${gotDotSwiftVersion}`)
     return await selectSwift(gotDotSwiftVersion)
   } else {
-
     // figure out the GHA image default Xcode’s version
 
     const devdir = await exec('xcode-select', ['--print-path'])
@@ -62,29 +67,28 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
     }
   }
 
-  async function selectXcode(constraint?: string) {
-    const rv = (await xcodes()).filter(([path, v]) =>
-      constraint ? semver.satisfies(v, constraint) : true
-    ).sort((a,b) =>
-      semver.compare(a[1], b[1])
-    ).pop()
+  async function selectXcode(range?: Range): Promise<SemVer> {
+    const rv = (await xcodes())
+      .filter(([, v]) => (range ? semver.satisfies(v, range) : true))
+      .sort((a, b) => semver.compare(a[1], b[1]))
+      .pop()
 
-    if (!rv) throw new Error(`No Xcode ~> ${constraint}`)
+    if (!rv) throw new Error(`No Xcode ~> ${range}`)
 
     spawn('sudo', ['xcode-select', '--switch', rv[0]])
 
     return rv[1]
   }
 
-  async function selectSwift(constraint: string): Promise<string> {
+  async function selectSwift(range: Range): Promise<SemVer> {
     const rv1 = await xcodes()
     const rv2 = await Promise.all(rv1.map(swiftVersion))
     const rv3 = rv2
-      .filter(([,,sv]) => semver.satisfies(sv, constraint))
-      .sort((a,b) => semver.compare(a[1], b[1]))
+      .filter(([, , sv]) => semver.satisfies(sv, range))
+      .sort((a, b) => semver.compare(a[1], b[1]))
       .pop()
 
-    if (!rv3) throw new Error(`No Xcode with Swift ~> ${constraint}`)
+    if (!rv3) throw new Error(`No Xcode with Swift ~> ${range}`)
 
     core.info(`» Selected Swift ${rv3[2]}`)
 
@@ -92,73 +96,108 @@ async function xcselect(xcode: string | undefined, swift: string | undefined): P
 
     return rv3[1]
 
-    async function swiftVersion([DEVELOPER_DIR, xcodeVersion]: [string, string]): Promise<[string, string, string]> {
-      const stdout = await exec('swift', ['--version'], {DEVELOPER_DIR})
+    async function swiftVersion([DEVELOPER_DIR, xcodeVersion]: [
+      string,
+      SemVer
+    ]): Promise<[string, SemVer, SemVer]> {
+      const stdout = await exec('swift', ['--version'], { DEVELOPER_DIR })
       const matches = stdout.match(/Swift version (.+?)\s/m)
-      if (!matches || !matches[1]) throw new Error(`failed to extract Swift version from Xcode ${xcodeVersion}`)
-      const version = semver.coerce(matches[1])?.version
-      if (!version) throw new Error(`failed to parse Swift version from Xcode ${xcodeVersion}`)
+      if (!matches || !matches[1])
+        throw new Error(
+          `failed to extract Swift version from Xcode ${xcodeVersion}`
+        )
+      const version = semver.coerce(matches[1])
+      if (!version)
+        throw new Error(
+          `failed to parse Swift version from Xcode ${xcodeVersion}`
+        )
       return [DEVELOPER_DIR, xcodeVersion, version]
     }
   }
 
-  function dotSwiftVersion(): string | undefined {
-    if (!fs.existsSync('.swift-version')) return
-    return fs.readFileSync('.swift-version').toString().trim()
+  function dotSwiftVersion(): Range | undefined {
+    if (!fs.existsSync('.swift-version')) return undefined
+    const version = fs.readFileSync('.swift-version').toString().trim()
+    try {
+      // A .swift-version of '5.0' indicates a SemVer Range of '>=5.0.0 <5.1.0'
+      return new Range('~' + version)
+    } catch (error) {
+      core.warning(
+        `Failed to parse Swift version from .swift-version: ${error}`
+      )
+    }
   }
 }
 
 interface Devices {
   devices: {
-    [key: string]: [{
-      udid: string
-    }]
+    [key: string]: [
+      {
+        udid: string
+      }
+    ]
   }
 }
 
 type DeviceType = 'watchOS' | 'tvOS' | 'iOS'
-type DestinationsResponse = {[key: string]: string}
+type Destination = { [key: string]: string }
 
-async function scheme(): Promise<string> {
+interface Schemes {
+  workspace?: {
+    schemes: string[]
+  }
+  project?: {
+    schemes: string[]
+  }
+}
+
+export async function getSchemeFromPackage(): Promise<string> {
   const out = await exec('xcodebuild', ['-list', '-json'])
-  const json = parseJSON(out)
-  const schemes = (json?.workspace ?? json?.project)?.schemes as string[]
-  if (!schemes || schemes.length == 0) throw new Error('Could not determine scheme')
+  const json = parseJSON<Schemes>(out)
+  const schemes = (json?.workspace ?? json?.project)?.schemes
+  if (!schemes || schemes.length == 0)
+    throw new Error('Could not determine scheme')
   for (const scheme of schemes) {
     if (scheme.endsWith('-Package')) return scheme
   }
   return schemes[0]
 }
 
-export function parseJSON(input: string) {
+function parseJSON<T>(input: string): T {
   try {
     input = input.trim()
     // works around xcodebuild sometimes outputting this string in CI conditions
-    const xcodebuildSucks = 'build session not created after 15 seconds - still waiting'
+    const xcodebuildSucks =
+      'build session not created after 15 seconds - still waiting'
     if (input.endsWith(xcodebuildSucks)) {
       input = input.slice(0, -xcodebuildSucks.length)
     }
-    return JSON.parse(input)
+    return JSON.parse(input) as T
   } catch (error) {
-    core.startGroup("JSON")
-    core.error(input)
-    core.endGroup()
+    core.group('JSON', async function () {
+      core.error(input)
+    })
     throw error
   }
 }
 
-async function destinations(): Promise<DestinationsResponse> {
-  const out = await exec('xcrun', ['simctl', 'list', '--json', 'devices', 'available'])
-  const devices = (parseJSON(out) as Devices).devices
+async function destinations(): Promise<Destination> {
+  const out = await exec('xcrun', [
+    'simctl',
+    'list',
+    '--json',
+    'devices',
+    'available',
+  ])
+  const devices = parseJSON<Devices>(out).devices
 
-  const rv: {[key: string]: {v: string, id: string}} = {}
+  const rv: { [key: string]: { v: SemVer; id: string } } = {}
   for (const opaqueIdentifier in devices) {
     const device = (devices[opaqueIdentifier] ?? [])[0]
     if (!device) continue
     const [type, v] = parse(opaqueIdentifier)
-    //TODO make into semantic version and do a proper comparison
-    if (!rv[type] || rv[type].v < v) {
-      rv[type] = {v, id: device.udid}
+    if (v && (!rv[type] || semver.lt(rv[type].v, v))) {
+      rv[type] = { v, id: device.udid }
     }
   }
 
@@ -168,87 +207,110 @@ async function destinations(): Promise<DestinationsResponse> {
     iOS: rv.iOS?.id,
   }
 
-  function parse(key: string): [DeviceType, string] {
+  function parse(key: string): [DeviceType, SemVer?] {
     const [type, ...vv] = (key.split('.').pop() ?? '').split('-')
-    const v = vv.join('.')
-    return [type as DeviceType, v]
+    const v = semver.coerce(vv.join('.'))
+    return [type as DeviceType, v ?? undefined]
   }
 }
 
-async function exec(command: string, args?: string[], env?: {[key: string]: string}): Promise<string> {
+async function exec(
+  command: string,
+  args?: string[],
+  env?: { [key: string]: string }
+): Promise<string> {
   let out = ''
   try {
-    await gha_exec.exec(command, args, { listeners: {
-      stdout: data => out += data.toString(),
-      stderr: data => core.info(`⚠ ${command}: ${'\u001b[33m'}${data.toString()}`)
-    }, silent: verbosity() != 'verbose', env})
+    await gha_exec.exec(command, args, {
+      listeners: {
+        stdout: (data) => (out += data.toString()),
+        stderr: (data) =>
+          core.info(`⚠ ${command}: ${'\u001b[33m'}${data.toString()}`),
+      },
+      silent: verbosity() != 'verbose',
+      env,
+    })
 
     return out
   } catch (error) {
     // help debug efforts by showing what we ran if there was an error
-    core.info(`» ${command} ${args ? args.join(" \\\n") : ''}`)
+    core.info(`» ${command} ${args ? args.join(' \\\n') : ''}`)
     throw error
   }
 }
 
-function verbosity(): 'xcpretty' | 'quiet' | 'verbose' {
+export function verbosity(): 'xcpretty' | 'quiet' | 'verbose' {
   const value = core.getInput('verbosity')
   switch (value) {
-  case 'xcpretty':
-  case 'quiet':
-  case 'verbose':
-    return value
-  default:
-    // backwards compatability
-    if (core.getBooleanInput('quiet')) return 'quiet'
+    case 'xcpretty':
+    case 'quiet':
+    case 'verbose':
+      return value
+    default:
+      // backwards compatability
+      if (core.getBooleanInput('quiet')) return 'quiet'
 
-    core.warning(`invalid value for \`verbosity\` (${value})`)
-    return 'xcpretty'
+      core.warning(`invalid value for \`verbosity\` (${value})`)
+      return 'xcpretty'
   }
 }
 
-function getConfiguration() {
+export function getConfiguration(): string {
   const conf = core.getInput('configuration')
   switch (conf) {
     // both `.xcodeproj` and SwiftPM projects capitalize these
     // by default, and are case-sensitive. And for both if an
     // incorrect configuration is specified do not error, but
     // do not behave as expected instead.
-    case 'debug': return 'Debug'
-    case 'release': return 'Release'
-    default: return conf
+    case 'debug':
+      return 'Debug'
+    case 'release':
+      return 'Release'
+    default:
+      return conf
   }
 }
 
-export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | ''
+export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | 'mac-catalyst'
 
-export function getAction(platform: Platform, selectedXcode: string): string | null {
+export function getAction(
+  xcodeVersion: SemVer,
+  platform?: Platform
+): string | undefined {
   const action = core.getInput('action')
-  if (semver.gte(selectedXcode, '12.5.0')) {
-    return action
-  } else if (platform == 'watchOS' && actionIsTestable(action)) {
-    core.info("Setting `action=build` for Apple Watch / Xcode <12.5")
+  if (
+    platform == 'watchOS' &&
+    actionIsTestable(action) &&
+    semver.lt(xcodeVersion, '12.5.0')
+  ) {
+    core.info('Setting `action=build` for Apple Watch / Xcode <12.5')
     return 'build'
-  } else {
-    return action || null
   }
+
+  return action ?? undefined
 }
 
-const actionIsTestable = (action: string | null) => action == 'test' || action == 'build-for-testing'
+export function actionIsTestable(action?: string): boolean {
+  return action == 'test' || action == 'build-for-testing'
+}
 
-export async function getDestination(platform: string, xcode: string): Promise<string[]> {
-  switch (platform.trim()) {
+export async function getDestination(
+  xcodeVersion: SemVer,
+  platform?: Platform
+): Promise<string[]> {
+  switch (platform) {
     case 'iOS':
     case 'tvOS':
-    case 'watchOS':
+    case 'watchOS': {
       const id = (await destinations())[platform]
       return ['-destination', `id=${id}`]
+    }
     case 'macOS':
       return ['-destination', 'platform=macOS']
     case 'mac-catalyst':
       return ['-destination', 'platform=macOS,variant=Mac Catalyst']
-    case '':
-      if (semver.gte(xcode, '13.0.0')) {
+    case undefined:
+      if (semver.gte(xcodeVersion, '13.0.0')) {
         //FIXME should parse output from xcodebuild -showdestinations
         //NOTE `-json` doesn’t work
         // eg. the Package.swift could only allow iOS, assuming macOS is going to work OFTEN
@@ -262,7 +324,10 @@ export async function getDestination(platform: string, xcode: string): Promise<s
   }
 }
 
-export function getIdentity(identity: string, platform: string): string | null {
+export function getIdentity(
+  identity: string,
+  platform?: Platform
+): string | undefined {
   if (identity) {
     return `CODE_SIGN_IDENTITY="${identity}"`
   }
@@ -272,14 +337,12 @@ export function getIdentity(identity: string, platform: string): string | null {
     core.info('Disabling code signing for Mac Catalyst.')
     return 'CODE_SIGN_IDENTITY=-'
   }
-
-  return null
 }
 
 // In order to avoid exposure to command line audit logging, we pass commands in
 // via stdin. We allow only one command at a time in an effort to avoid injection.
-function security(...args: string[]) {
-  for (var arg of args) {
+function security(...args: string[]): void {
+  for (const arg of args) {
     if (arg.includes('\n')) throw new Error('Invalid security argument')
   }
 
@@ -287,7 +350,10 @@ function security(...args: string[]) {
   spawn('/usr/bin/security', ['-i'], { input: command })
 }
 
-export async function createKeychain(certificate: string, passphrase: string) {
+export async function createKeychain(
+  certificate: string,
+  passphrase: string
+): Promise<void> {
   // The user should have already stored these as encrypted secrets, but we'll be paranoid on their behalf.
   core.setSecret(certificate)
   core.setSecret(passphrase)
@@ -304,8 +370,11 @@ export async function createKeychain(certificate: string, passphrase: string) {
   const keychainPath = `${process.env.RUNNER_TEMP}/${name}.keychain-db`
   core.saveState('keychainPath', keychainPath)
 
-  const keychainSearchPath = (await exec('/usr/bin/security', ['list-keychains', '-d', 'user']))
-    .split('\n').map(value => value.trim())
+  const keychainSearchPath = (
+    await exec('/usr/bin/security', ['list-keychains', '-d', 'user'])
+  )
+    .split('\n')
+    .map((value) => value.trim())
 
   core.saveState('keychainSearchPath', keychainSearchPath)
 
@@ -319,16 +388,36 @@ export async function createKeychain(certificate: string, passphrase: string) {
   const certificatePath = `${process.env.RUNNER_TEMP}/${name}.p12`
   fs.writeFileSync(certificatePath, certificate, { encoding: 'base64' })
   try {
-    security('import', certificatePath, '-P', passphrase, '-A', '-t', 'cert', '-f', 'pkcs12', '-x', '-k', keychainPath)
+    security(
+      'import',
+      certificatePath,
+      '-P',
+      passphrase,
+      '-A',
+      '-t',
+      'cert',
+      '-f',
+      'pkcs12',
+      '-x',
+      '-k',
+      keychainPath
+    )
   } finally {
     fs.unlinkSync(certificatePath)
   }
 
   core.info('Updating keychain search path')
-  security('list-keychains', '-d', 'user', '-s', keychainPath, ...keychainSearchPath)
+  security(
+    'list-keychains',
+    '-d',
+    'user',
+    '-s',
+    keychainPath,
+    ...keychainSearchPath
+  )
 }
 
-export async function deleteKeychain() {
+export async function deleteKeychain(): Promise<void> {
   const state = core.getState('keychainSearchPath')
   if (state) {
     const keychainSearchPath: string[] = JSON.parse(state)
@@ -354,8 +443,4 @@ export async function deleteKeychain() {
       }
     }
   }
-}
-
-export {
-  exec, destinations, scheme, xcselect, spawn, verbosity, getConfiguration, actionIsTestable
 }
