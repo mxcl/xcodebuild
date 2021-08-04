@@ -61,11 +61,7 @@ async function main() {
   function getPlatformInput(input: string): Platform | undefined {
     const value = core.getInput(input)
     if (!value) return undefined
-    try {
-      return value as Platform
-    } catch (error) {
-      throw new Error(`failed to parse platform from '${value}': ${error}`)
-    }
+    return value as Platform
   }
 
   function getRangeInput(input: string): Range | undefined {
