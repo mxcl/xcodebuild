@@ -22,6 +22,25 @@ jobs:
         with:
           working-directory: fixtures/debug
 
+  executable-runs:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: build
+          working-directory: fixtures/executable
+      - run: |
+          if pgrep -a xcodebuild; then
+            echo >&2 "error: xcodebuild is still running"
+            exit 1
+          fi
+          OUT=$(~/Library/Developer/Xcode/DerivedData/executable-*/Build/Products/Debug/my-fixture)
+          if [[ "${OUT}" != 'Hello, world!' ]]; then
+            echo >&2 "error: output of my-fixture was unexpected: ${OUT}"
+            exit 2
+          fi
+
   null-none-action:
     runs-on: macos-latest
     strategy:
