@@ -41,6 +41,21 @@ jobs:
             exit 2
           fi
 
+  invalid-action-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          action: invalid-action
+          working-directory: fixtures/executable
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
   null-none-action:
     runs-on: macos-latest
     strategy:
