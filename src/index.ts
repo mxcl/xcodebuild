@@ -7,11 +7,11 @@ import {
   getDestination,
   getIdentity,
   getSchemeFromPackage,
-  Platform,
   spawn,
   verbosity,
   xcselect,
 } from './lib'
+import type { Platform } from './lib'
 import xcodebuildX from './xcodebuild'
 import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
@@ -98,10 +98,13 @@ async function main() {
   }
 
   function generateXcodeproj(reason: string) {
-    core.group('Generating `.xcodeproj`', async function () {
+    core.startGroup('Generating `.xcodeproj`')
+    try {
       core.info(`Generating \`.xcodeproj\` ∵ ${reason}`)
       spawn('swift', ['package', 'generate-xcodeproj'])
-    })
+    } finally {
+      core.endGroup()
+    }
   }
 
   async function configureKeychain() {
@@ -119,7 +122,7 @@ async function main() {
       )
     }
 
-    await core.group('Configuring code signing', async function () {
+    await core.group('Configuring code signing', async () => {
       await createKeychain(certificate, passphrase)
     })
   }
@@ -133,11 +136,11 @@ async function main() {
 
   //// helper funcs
 
-  async function xcodebuild(action?: string, scheme?: string): Promise<void> {
+  async function xcodebuild(action?: string, scheme?: string) {
     if (action === 'none') return
 
     const title = ['xcodebuild', action].filter((x) => x).join(' ')
-    core.group(title, async function () {
+    await core.group(title, async () => {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
       if (identity) args = args.concat(identity)
@@ -175,13 +178,13 @@ async function main() {
     }
 
     if (swiftPM) {
-      return await getSchemeFromPackage()
+      return getSchemeFromPackage()
     }
   }
 }
 
-async function post() {
-  await deleteKeychain()
+function post() {
+  deleteKeychain()
 }
 
 async function run() {
@@ -190,7 +193,8 @@ async function run() {
   // state in `main` for `post` to read.
   const isPost = Boolean(core.getState('isPost'))
   if (isPost) {
-    return await post()
+    post()
+    return
   } else {
     core.saveState('isPost', true)
   }
@@ -218,7 +222,7 @@ async function run() {
   }
 }
 
-run().catch(async (e) => {
+run().catch((e) => {
   core.setFailed(e)
 
   if (e instanceof SyntaxError && e.stack) {
@@ -235,7 +239,7 @@ async function uploadLogs() {
         fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry]
       )
 
-  core.group('Uploading Logs', async function () {
+  await core.group('Uploading Logs', async () => {
     const xcresults = fs
       .readdirSync('.')
       .filter((entry) => path.extname(entry) == '.xcresult')

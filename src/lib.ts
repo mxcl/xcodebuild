@@ -1,9 +1,11 @@
 import * as core from '@actions/core'
 import * as gha_exec from '@actions/exec'
-import { spawnSync, SpawnSyncOptions } from 'child_process'
+import { spawnSync } from 'child_process'
+import type { SpawnSyncOptions } from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
-import semver, { Range, SemVer } from 'semver'
+import semver, { Range } from 'semver'
+import type { SemVer } from 'semver'
 
 async function mdls(path: string): Promise<SemVer | undefined> {
   const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
@@ -43,15 +45,15 @@ export function spawn(
 
 export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
   if (swift) {
-    return await selectSwift(swift)
+    return selectSwift(swift)
   } else if (xcode) {
-    return await selectXcode(xcode)
+    return selectXcode(xcode)
   }
 
   const gotDotSwiftVersion = dotSwiftVersion()
   if (gotDotSwiftVersion) {
     core.info(`» \`.swift-version\` » ~> ${gotDotSwiftVersion}`)
-    return await selectSwift(gotDotSwiftVersion)
+    return selectSwift(gotDotSwiftVersion)
   } else {
     // figure out the GHA image default Xcode’s version
 
@@ -174,9 +176,9 @@ function parseJSON<T>(input: string): T {
     }
     return JSON.parse(input) as T
   } catch (error) {
-    core.group('JSON', async function () {
-      core.error(input)
-    })
+    core.startGroup('JSON')
+    core.error(input)
+    core.endGroup()
     throw error
   }
 }
@@ -417,7 +419,7 @@ export async function createKeychain(
   )
 }
 
-export async function deleteKeychain(): Promise<void> {
+export function deleteKeychain(): void {
   const state = core.getState('keychainSearchPath')
   if (state) {
     const keychainSearchPath: string[] = JSON.parse(state)
