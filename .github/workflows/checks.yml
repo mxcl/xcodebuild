@@ -22,6 +22,94 @@ jobs:
         with:
           working-directory: fixtures/debug
 
+  xcodebuild-has-exited:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          working-directory: fixtures/debug
+      - run: |
+          if pgrep -a xcodebuild; then
+            echo >&2 "error: xcodebuild is still running"
+            exit 1
+          fi
+
+  executable-runs:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          action: build
+          working-directory: fixtures/executable
+      - run: |
+          OUT=$(~/Library/Developer/Xcode/DerivedData/executable-*/Build/Products/Debug/my-fixture)
+          if [[ "${OUT}" != 'Hello, world!' ]]; then
+            echo >&2 "error: output of my-fixture was unexpected: ${OUT}"
+            exit 1
+          fi
+
+  invalid-action-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          action: invalid
+          working-directory: fixtures/debug
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
+  invalid-platform-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          platform: invalid
+          working-directory: fixtures/debug
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
+  invalid-swift-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          swift: invalid
+          working-directory: fixtures/debug
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
+  invalid-xcode-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          xcode: invalid
+          working-directory: fixtures/debug
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
   null-none-action:
     runs-on: macos-latest
     strategy:
