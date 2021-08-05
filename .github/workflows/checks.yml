@@ -57,7 +57,7 @@ jobs:
       - uses: ./
         id: xcodebuild
         with:
-          action: invalid-action
+          action: invalid
           working-directory: fixtures/debug
         continue-on-error: true
       - if: steps.xcodebuild.outcome == 'success'
@@ -72,7 +72,7 @@ jobs:
       - uses: ./
         id: xcodebuild
         with:
-          platform: invalid-platform
+          platform: invalid
           working-directory: fixtures/debug
         continue-on-error: true
       - if: steps.xcodebuild.outcome == 'success'
@@ -87,7 +87,7 @@ jobs:
       - uses: ./
         id: xcodebuild
         with:
-          swift: invalid-xcode
+          swift: invalid
           working-directory: fixtures/debug
         continue-on-error: true
       - if: steps.xcodebuild.outcome == 'success'
@@ -102,7 +102,7 @@ jobs:
       - uses: ./
         id: xcodebuild
         with:
-          xcode: invalid-xcode
+          xcode: invalid
           working-directory: fixtures/debug
         continue-on-error: true
       - if: steps.xcodebuild.outcome == 'success'
