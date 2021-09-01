@@ -1,8 +1,0 @@
-{
-  "extends": "@tsconfig/node12/tsconfig.json",
-  "compilerOptions": {
-    "noImplicitAny": true,
-    "moduleResolution": "node"
-  },
-  "exclude": ["node_modules"]
-}
