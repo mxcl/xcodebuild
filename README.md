@@ -249,6 +249,12 @@ jobs:
 
 This action does not support Linux.
 
+## Windows
+
+Use: https://github.com/marketplace/actions/swift-for-windows-action
+
+This action does not support Windows.
+
 ## Contributing
 
 1. Run `npm install`
