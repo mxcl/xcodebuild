@@ -227,7 +227,7 @@ async function exec(
       listeners: {
         stdout: (data) => (out += data.toString()),
         stderr: (data) =>
-          core.info(`⚠ ${command}: ${'\u001b[33m'}${data.toString()}`),
+          core.warning(`${command}: ${'\u001b[33m'}${data.toString()}`),
       },
       silent: verbosity() != 'verbose',
       env,
