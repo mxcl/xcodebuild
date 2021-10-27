@@ -427,7 +427,7 @@ export function deleteKeychain(): void {
     try {
       security('list-keychains', '-d', 'user', '-s', ...keychainSearchPath)
     } catch (error) {
-      core.error(error)
+      core.error('Failed to restore keychain search path: ' + error)
       // Continue cleaning up.
     }
   }
@@ -438,7 +438,7 @@ export function deleteKeychain(): void {
     try {
       security('delete-keychain', keychainPath)
     } catch (error) {
-      core.error(error)
+      core.error('Failed to delete keychain: ' + error)
       // Best we can do is deleting the keychain file.
       if (fs.existsSync(keychainPath)) {
         fs.unlinkSync(keychainPath)
