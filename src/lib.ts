@@ -285,7 +285,7 @@ export function getAction(
     actionIsTestable(action) &&
     semver.lt(xcodeVersion, '12.5.0')
   ) {
-    core.info('Setting `action=build` for Apple Watch / Xcode <12.5')
+    core.notice('Setting `action=build` for Apple Watch / Xcode <12.5')
     return 'build'
   }
 
@@ -336,7 +336,7 @@ export function getIdentity(
 
   if (platform == 'mac-catalyst') {
     // Disable code signing for Mac Catalyst unless overridden.
-    core.info('Disabling code signing for Mac Catalyst.')
+    core.notice('Disabling code signing for Mac Catalyst.')
     return 'CODE_SIGN_IDENTITY=-'
   }
 }
