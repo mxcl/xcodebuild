@@ -227,7 +227,7 @@ async function exec(
       listeners: {
         stdout: (data) => (out += data.toString()),
         stderr: (data) =>
-          core.info(`⚠ ${command}: ${'\u001b[33m'}${data.toString()}`),
+          core.warning(`${command}: ${'\u001b[33m'}${data.toString()}`),
       },
       silent: verbosity() != 'verbose',
       env,
@@ -285,7 +285,7 @@ export function getAction(
     actionIsTestable(action) &&
     semver.lt(xcodeVersion, '12.5.0')
   ) {
-    core.info('Setting `action=build` for Apple Watch / Xcode <12.5')
+    core.notice('Setting `action=build` for Apple Watch / Xcode <12.5')
     return 'build'
   }
 
@@ -336,7 +336,7 @@ export function getIdentity(
 
   if (platform == 'mac-catalyst') {
     // Disable code signing for Mac Catalyst unless overridden.
-    core.info('Disabling code signing for Mac Catalyst.')
+    core.notice('Disabling code signing for Mac Catalyst.')
     return 'CODE_SIGN_IDENTITY=-'
   }
 }
@@ -427,7 +427,7 @@ export function deleteKeychain(): void {
     try {
       security('list-keychains', '-d', 'user', '-s', ...keychainSearchPath)
     } catch (error) {
-      core.error(error)
+      core.error('Failed to restore keychain search path: ' + error)
       // Continue cleaning up.
     }
   }
@@ -438,7 +438,7 @@ export function deleteKeychain(): void {
     try {
       security('delete-keychain', keychainPath)
     } catch (error) {
-      core.error(error)
+      core.error('Failed to delete keychain: ' + error)
       // Best we can do is deleting the keychain file.
       if (fs.existsSync(keychainPath)) {
         fs.unlinkSync(keychainPath)
