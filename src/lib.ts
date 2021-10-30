@@ -103,7 +103,12 @@ export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
       SemVer
     ]): Promise<[string, SemVer, SemVer]> {
       // This command emits 'swift-driver version: ...' to stderr.
-      const stdout = await exec('swift', ['--version'], { DEVELOPER_DIR }, true)
+      const stdout = await exec(
+        'swift',
+        ['--version'],
+        { DEVELOPER_DIR },
+        false
+      )
       const matches = stdout.match(/Swift version (.+?)\s/m)
       if (!matches || !matches[1])
         throw new Error(
@@ -221,7 +226,7 @@ async function exec(
   command: string,
   args?: string[],
   env?: { [key: string]: string },
-  silenceStdErr?: boolean
+  stdErrToWarning = true
 ): Promise<string> {
   let out = ''
   try {
@@ -229,8 +234,11 @@ async function exec(
       listeners: {
         stdout: (data) => (out += data.toString()),
         stderr: (data) => {
-          if (!silenceStdErr) {
-            core.warning(`${command}: ${'\u001b[33m'}${data.toString()}`)
+          const message = `${command}: ${'\u001b[33m'}${data.toString()}`
+          if (stdErrToWarning) {
+            core.warning(message)
+          } else {
+            core.info(message)
           }
         },
       },
