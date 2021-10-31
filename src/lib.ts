@@ -102,7 +102,13 @@ export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
       string,
       SemVer
     ]): Promise<[string, SemVer, SemVer]> {
-      const stdout = await exec('swift', ['--version'], { DEVELOPER_DIR })
+      // This command emits 'swift-driver version: ...' to stderr.
+      const stdout = await exec(
+        'swift',
+        ['--version'],
+        { DEVELOPER_DIR },
+        false
+      )
       const matches = stdout.match(/Swift version (.+?)\s/m)
       if (!matches || !matches[1])
         throw new Error(
@@ -219,15 +225,22 @@ async function destinations(): Promise<Destination> {
 async function exec(
   command: string,
   args?: string[],
-  env?: { [key: string]: string }
+  env?: { [key: string]: string },
+  stdErrToWarning = true
 ): Promise<string> {
   let out = ''
   try {
     await gha_exec.exec(command, args, {
       listeners: {
         stdout: (data) => (out += data.toString()),
-        stderr: (data) =>
-          core.warning(`${command}: ${'\u001b[33m'}${data.toString()}`),
+        stderr: (data) => {
+          const message = `${command}: ${'\u001b[33m'}${data.toString()}`
+          if (stdErrToWarning) {
+            core.warning(message)
+          } else {
+            core.info(message)
+          }
+        },
       },
       silent: verbosity() != 'verbose',
       env,
