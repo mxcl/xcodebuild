@@ -270,3 +270,5 @@ This action does not support Windows.
 [img]: https://raw.githubusercontent.com/mxcl/xcodebuild/gh-pages/XCResult.png
 [secrets]: https://docs.github.com/en/actions/reference/encrypted-secrets
 [export]: https://docs.github.com/en/actions/guides/installing-an-apple-certificate-on-macos-runners-for-xcode-development#creating-secrets-for-your-certificate-and-provisioning-profile
+
+![Analytics](https://repobeats.axiom.co/api/embed/d18c74fbcc8431bca3d0dd76cc3131c32df24dce.svg "Repobeats analytics image")
