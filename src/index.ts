@@ -19,18 +19,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import semver, { Range } from 'semver'
 
-// Unhandled promise rejections don't terminate the process by default until node 15.
-// GitHub Actions run in node 12, and we don't have a way to pass --unhandled-rejections=strict.
-// [https://github.com/mxcl/xcodebuild/issues/53]
-if (semver.lt(process.version, '15.0.0')) {
-  process.on('unhandledRejection', (reason, promise) => {
-    core.error(
-      `internal error: unhandled rejection at: ${promise}, reason: ${reason}`
-    )
-    process.exit(1)
-  })
-}
-
 //TODO we also need to set the right flags for other languages
 const warningsAsErrorsFlags = 'OTHER_SWIFT_FLAGS=-warnings-as-errors'
 
