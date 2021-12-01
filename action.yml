@@ -80,7 +80,7 @@ inputs:
     default: on-failure
     required: false
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'
   post: 'dist/index.js'
   post-if: runner.os == 'macOS'
