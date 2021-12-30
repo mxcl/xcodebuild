@@ -142,7 +142,8 @@ if you think we could have figured it out but didn’t please open a ticket.
 
 GitHub’s images have a **limited selection** of Xcodes.
 
-- GitHub list what is available for the current 10.15 image [here][gha-xcode-list].
+- GitHub list what is available for the current [10.15][gha-xcode-list-catalina]
+  and [11][gha-xcode-list-big-sur] images.
 - We run a scheduled workflow to determine what is available [here][automated-list].
 
 To install other versions first use [sinoru/actions-setup-xcode], then
@@ -174,6 +175,46 @@ This behavior cannot currently be disabled, PR welcome.
 
 ## Code Signing
 
+> This feature requires macOS.
+
+Code signing can be enabled with either an App Store Connect API key, or with a
+certificate.
+
+### Using an App Store Connect API Key
+
+> This feature requires Xcode 13 or later.
+
+[Create][create-api-key-instructions] an API key on
+[App Store Connect][create-api-key]. Download your key and Base64-encode it:
+
+```bash
+base64 AuthKey_9XXXX9XXXX.p8
+```
+
+Create [GitHub Secrets][secrets] for your base64-encoded key, the key ID, and
+the key's issuer ID. The IDs are displayed on App Store Connect.
+
+```yaml
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - use: mxcl/xcodebuild@v1
+        with:
+          authentication-key-base64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          authentication-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          authentication-key-issuer-id: ${{ secrets.APP_STORE_CONNECT_KEY_ISSER_ID }}
+```
+
+For more information on this method of code signing, please review the
+["Distribute apps in Xcode with cloud signing"][cloud-signing] talk from WWDC21.
+
+### Using a Specific Certificate
+
+Alternatively, if you have a code signing certificate you'd like to use, it can
+be installed to the macOS Keychain. It is automatically removed from the
+Keychain in a post action.
+
 ```yaml
 jobs:
   build:
@@ -185,17 +226,16 @@ jobs:
           code-sign-certificate-passphrase: ${{ secrets.CERTIFICATE_PASSPHRASE}}
 ```
 
-> This feature requires macOS.
-
-A code signing certificate can be installed to the macOS Keychain. It is
-automatically removed from the Keychain in a post action.
-
 To export your certificate from Xcode and Base64 encode it, follow
 [these instructions][export]. Store any secrets, including certificates and
 passphrases, in GitHub as [Encrypted Secrets][secrets].
 
+### Specifying an Identity
+
 You may specify a `code-sign-identity` to override any `CODE_SIGN_IDENTITY`
 specified by your project.
+
+### Disabling Code Signing
 
 To disable code signing, you can specify `code-sign-identity: '-'`.
 
@@ -265,7 +305,11 @@ This action does not support Windows.
 1. Create a [Pull Request](https://github.com/mxcl/xcodebuild/compare)
 
 [automated-list]: https://flatgithub.com/mxcl/.github/?filename=versions.json
-[gha-xcode-list]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
+[cloud-signing]: https://developer.apple.com/videos/play/wwdc2021/10204/
+[create-api-key]: https://appstoreconnect.apple.com/access/api
+[create-api-key-instructions]: https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api
+[gha-xcode-list-catalina]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
+[gha-xcode-list-big-sur]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-11-Readme.md#xcode
 [sinoru/actions-setup-xcode]: https://github.com/sinoru/actions-setup-xcode
 [img]: https://raw.githubusercontent.com/mxcl/xcodebuild/gh-pages/XCResult.png
 [secrets]: https://docs.github.com/en/actions/reference/encrypted-secrets

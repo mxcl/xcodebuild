@@ -1,6 +1,8 @@
 import {
   actionIsTestable,
+  createApiKeyFile,
   createKeychain,
+  deleteApiKeyFile,
   deleteKeychain,
   getAction,
   getConfiguration,
@@ -47,6 +49,8 @@ async function main() {
   if (reason) {
     generateXcodeproj(reason)
   }
+
+  const apiKey = await getApiKey()
 
   await configureKeychain()
 
@@ -103,6 +107,44 @@ async function main() {
     }
   }
 
+  async function getApiKey(): Promise<string[] | undefined> {
+    const key = core.getInput('authentication-key-base64')
+    if (!key) return
+
+    if (semver.lt(selected, '13.0.0')) {
+      core.notice(
+        'Ignoring authentication-key-base64 because it requires Xcode 13 or later.'
+      )
+      return
+    }
+
+    const keyId = core.getInput('authentication-key-id')
+    const keyIssuerId = core.getInput('authentication-key-issuer-id')
+    if (!keyId || !keyIssuerId) {
+      throw new Error(
+        'authentication-key-base64 requires authentication-key-id and authentication-key-issuer-id.'
+      )
+    }
+
+    // The user should have already stored these as encrypted secrets, but we'll
+    // be paranoid on their behalf.
+    core.setSecret(key)
+    core.setSecret(keyId)
+    core.setSecret(keyIssuerId)
+
+    const keyPath = await createApiKeyFile(key)
+    return [
+      '-allowProvisioningDeviceRegistration',
+      '-allowProvisioningUpdates',
+      '-authenticationKeyPath',
+      keyPath,
+      '-authenticationKeyID',
+      keyId,
+      '-authenticationKeyIssuerID',
+      keyIssuerId,
+    ]
+  }
+
   async function configureKeychain() {
     const certificate = core.getInput('code-sign-certificate')
     if (!certificate) return
@@ -142,6 +184,7 @@ async function main() {
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
+      if (apiKey) args = args.concat(apiKey)
 
       args = args.concat([
         '-resultBundlePath',
@@ -180,6 +223,7 @@ async function main() {
 }
 
 function post() {
+  deleteApiKeyFile()
   deleteKeychain()
 }
 

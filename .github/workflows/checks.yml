@@ -110,6 +110,38 @@ jobs:
           echo >&2 "error: expected action to fail, but it succeeded"
           exit 1
 
+  missing-api-key-id-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          authentication-key-base64: 'Cg=='
+          authentication-key-issuer-id: '14sb3dw0-r3t1-83u1-g381-4k9sg1t3w8r2'
+          working-directory: fixtures/debug
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
+  missing-api-key-issuer-id-fails:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: xcodebuild
+        with:
+          authentication-key-base64: 'Cg=='
+          authentication-key-id: 'JW271KX2u3'
+          working-directory: fixtures/debug
+        continue-on-error: true
+      - if: steps.xcodebuild.outcome == 'success'
+        run: |
+          echo >&2 "error: expected action to fail, but it succeeded"
+          exit 1
+
   null-none-action:
     runs-on: macos-latest
     strategy:
