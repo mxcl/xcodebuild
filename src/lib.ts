@@ -3,7 +3,7 @@ import * as gha_exec from '@actions/exec'
 import { spawnSync } from 'child_process'
 import type { SpawnSyncOptions } from 'child_process'
 import * as path from 'path'
-import * as fs from 'fs'
+import * as fs from 'fs/promises'
 import semver, { Range } from 'semver'
 import type { SemVer } from 'semver'
 
@@ -32,6 +32,13 @@ async function xcodes(): Promise<[string, SemVer][]> {
   return rv
 }
 
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return (
+    error instanceof Error &&
+    typeof (error as NodeJS.ErrnoException).code === 'string'
+  )
+}
+
 export function spawn(
   arg0: string,
   args: string[],
@@ -50,7 +57,7 @@ export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
     return selectXcode(xcode)
   }
 
-  const gotDotSwiftVersion = dotSwiftVersion()
+  const gotDotSwiftVersion = await dotSwiftVersion()
   if (gotDotSwiftVersion) {
     core.info(`» \`.swift-version\` » ~> ${gotDotSwiftVersion}`)
     return selectSwift(gotDotSwiftVersion)
@@ -123,9 +130,14 @@ export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
     }
   }
 
-  function dotSwiftVersion(): Range | undefined {
-    if (!fs.existsSync('.swift-version')) return undefined
-    const version = fs.readFileSync('.swift-version').toString().trim()
+  async function dotSwiftVersion(): Promise<Range | undefined> {
+    let version
+    try {
+      version = (await fs.readFile('.swift-version')).toString().trim()
+    } catch {
+      return undefined
+    }
+
     try {
       // A .swift-version of '5.0' indicates a SemVer Range of '>=5.0.0 <5.1.0'
       return new Range('~' + version)
@@ -401,7 +413,7 @@ export async function createKeychain(
   // Unfortunately, a certificate must be stored on disk in order to be imported. We remove it immediately after import.
   core.info('Importing certificate to keychain')
   const certificatePath = `${process.env.RUNNER_TEMP}/${name}.p12`
-  fs.writeFileSync(certificatePath, certificate, { encoding: 'base64' })
+  await fs.writeFile(certificatePath, certificate, { encoding: 'base64' })
   try {
     security(
       'import',
@@ -418,7 +430,7 @@ export async function createKeychain(
       keychainPath
     )
   } finally {
-    fs.unlinkSync(certificatePath)
+    await fs.unlink(certificatePath)
   }
 
   core.info('Updating keychain search path')
@@ -432,7 +444,7 @@ export async function createKeychain(
   )
 }
 
-export function deleteKeychain(): void {
+export async function deleteKeychain() {
   const state = core.getState('keychainSearchPath')
   if (state) {
     const keychainSearchPath: string[] = JSON.parse(state)
@@ -452,9 +464,13 @@ export function deleteKeychain(): void {
       security('delete-keychain', keychainPath)
     } catch (error) {
       core.error('Failed to delete keychain: ' + error)
-      // Best we can do is deleting the keychain file.
-      if (fs.existsSync(keychainPath)) {
-        fs.unlinkSync(keychainPath)
+    }
+
+    try {
+      await fs.unlink(keychainPath)
+    } catch (error) {
+      if (!(isErrnoException(error) && error.code == 'ENOENT')) {
+        core.error('Failed to delete keychain file: ' + error)
       }
     }
   }
@@ -472,19 +488,21 @@ export async function createAppStoreConnectApiKeyFile(
   const keyPath = `${process.env.RUNNER_TEMP}/${name}.p8`
   core.saveState('keyPath', keyPath)
   core.info('Creating App Store Connect API key file')
-  fs.writeFileSync(keyPath, key, { encoding: 'base64' })
+  await fs.writeFile(keyPath, key, { encoding: 'base64' })
 
   return keyPath
 }
 
-export function deleteAppStoreConnectApiKeyFile() {
+export async function deleteAppStoreConnectApiKeyFile() {
   const keyPath = core.getState('keyPath')
-  if (keyPath && fs.existsSync(keyPath)) {
+  if (keyPath) {
     core.info('Deleting App Store Connect API key file')
     try {
-      fs.unlinkSync(keyPath)
+      await fs.unlink(keyPath)
     } catch (error) {
-      core.error('Failed to delete App Store Connect API key file: ' + error)
+      if (!(isErrnoException(error) && error.code == 'ENOENT')) {
+        core.error('Failed to delete App Store Connect API key file: ' + error)
+      }
     }
   }
 }
@@ -513,7 +531,7 @@ async function createProvisioningProfile(profile: string, extension: string) {
     `${process.env.HOME}`,
     'Library/MobileDevice/Provisioning Profiles'
   )
-  fs.mkdirSync(directory, { recursive: true })
+  await fs.mkdir(directory, { recursive: true })
 
   const profilePath = path.join(directory, name + extension)
 
@@ -522,19 +540,19 @@ async function createProvisioningProfile(profile: string, extension: string) {
   state.push(profilePath)
   core.saveState('provisioningProfilePaths', state)
 
-  fs.writeFileSync(profilePath, profile, { encoding: 'base64' })
+  await fs.writeFile(profilePath, profile, { encoding: 'base64' })
 }
 
-export function deleteProvisioningProfiles() {
+export async function deleteProvisioningProfiles() {
   const state = core.getState('provisioningProfilePaths')
   if (!state) return
 
   core.info('Deleting provisioning profiles')
   for (const path in JSON.parse(state)) {
-    if (fs.existsSync(path)) {
-      try {
-        fs.unlinkSync(path)
-      } catch (error) {
+    try {
+      await fs.unlink(path)
+    } catch (error) {
+      if (!(isErrnoException(error) && error.code == 'ENOENT')) {
         core.error('Failed to delete provisioning profile: ' + error)
       }
     }

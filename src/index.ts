@@ -19,7 +19,7 @@ import type { Platform } from './lib'
 import xcodebuildX from './xcodebuild'
 import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
-import * as fs from 'fs'
+import * as fs from 'fs/promises'
 import * as path from 'path'
 import semver, { Range } from 'semver'
 
@@ -32,7 +32,13 @@ async function main() {
     process.chdir(cwd)
   }
 
-  const swiftPM = fs.existsSync('Package.swift')
+  let swiftPM = true
+  try {
+    await fs.access('Package.swift')
+  } catch {
+    swiftPM = false
+  }
+
   const platform = getPlatformInput('platform')
   const selected = await xcselect(
     getRangeInput('xcode'),
@@ -235,10 +241,10 @@ async function main() {
   }
 }
 
-function post() {
-  deleteAppStoreConnectApiKeyFile()
-  deleteKeychain()
-  deleteProvisioningProfiles()
+async function post() {
+  await deleteAppStoreConnectApiKeyFile()
+  await deleteKeychain()
+  await deleteProvisioningProfiles()
 }
 
 async function run() {
@@ -247,7 +253,7 @@ async function run() {
   // state in `main` for `post` to read.
   const isPost = Boolean(core.getState('isPost'))
   if (isPost) {
-    post()
+    await post()
     return
   } else {
     core.saveState('isPost', true)
@@ -285,18 +291,24 @@ run().catch((e) => {
 })
 
 async function uploadLogs() {
-  const getFiles: (directory: string) => string[] = (directory) =>
-    fs
-      .readdirSync(directory)
-      .map((entry) => path.join(directory, entry))
-      .flatMap((entry) =>
-        fs.lstatSync(entry).isDirectory() ? getFiles(entry) : [entry]
-      )
+  async function getFiles(directory: string): Promise<string[]> {
+    const results = []
+    for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+      const child = path.join(directory, entry.name)
+      if (entry.isDirectory()) {
+        results.concat(await getFiles(child))
+      } else {
+        results.push(child)
+      }
+    }
+
+    return results
+  }
 
   await core.group('Uploading Logs', async () => {
-    const xcresults = fs
-      .readdirSync('.')
-      .filter((entry) => path.extname(entry) == '.xcresult')
+    const xcresults = (await fs.readdir('.')).filter(
+      (entry) => path.extname(entry) == '.xcresult'
+    )
     if (xcresults.length === 0) {
       core.warning('strange… no `.xcresult` bundles found')
     }
@@ -311,7 +323,8 @@ async function uploadLogs() {
 
       const base = path.basename(xcresult, '.xcresult')
       const name = `${base}#${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
-      await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
+      const files = await getFiles(xcresult)
+      await artifact.create().uploadArtifact(name, files, '.')
     }
   })
 }
