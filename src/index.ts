@@ -2,8 +2,10 @@ import {
   actionIsTestable,
   createApiKeyFile,
   createKeychain,
+  createProvisioningProfiles,
   deleteApiKeyFile,
   deleteKeychain,
+  deleteProvisioningProfiles,
   getAction,
   getConfiguration,
   getDestination,
@@ -53,6 +55,7 @@ async function main() {
   const apiKey = await getApiKey()
 
   await configureKeychain()
+  await configureProvisioningProfiles()
 
   await build(await getScheme())
 
@@ -165,6 +168,16 @@ async function main() {
     })
   }
 
+  async function configureProvisioningProfiles() {
+    const mobileProfiles = core.getMultilineInput(
+      'mobile-provisioning-profiles-base64'
+    )
+    const profiles = core.getMultilineInput('provisioning-profiles-base64')
+    if (!mobileProfiles || !profiles) return
+
+    await createProvisioningProfiles(profiles, mobileProfiles)
+  }
+
   async function build(scheme?: string) {
     if (warningsAsErrors && actionIsTestable(action)) {
       await xcodebuild('build', scheme)
@@ -225,6 +238,7 @@ async function main() {
 function post() {
   deleteApiKeyFile()
   deleteKeychain()
+  deleteProvisioningProfiles()
 }
 
 async function run() {

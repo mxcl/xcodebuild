@@ -72,6 +72,14 @@ inputs:
       Identity to be used for code signing. If your project specifies a
       `CODE_SIGN_IDENTITY`, this will override it.
     required: false
+  mobile-provisioning-profiles-base64:
+    description: |
+      A multiline list of Base64-encoded mobile provisioning profiles.
+    required: false
+  provisioning-profiles-base64:
+    description: |
+      A multiline list of Base64-encoded Mac provisioning profiles.
+    required: false
   working-directory:
     description: '…'
     required: false

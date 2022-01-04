@@ -239,6 +239,30 @@ specified by your project.
 
 To disable code signing, you can specify `code-sign-identity: '-'`.
 
+## Provisioning Profiles
+
+You can specify multiple provisioning profiles for Mac using
+`provisioning-profiles-base64`, or for iOS or other devices using
+`mobile-provisioning-profiles-base64`.
+
+To export your provisioning profiles from Xcode and Base64 encode these, follow
+[these instructions][export]. Store any secrets, including provisioning
+profiles, in GitHub as [Encrypted Secrets][secrets].
+
+```yaml
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - use: mxcl/xcodebuild@v1
+        with:
+          mobile-provisioning-profiles-base64: |
+            ${{ secrets.IPHONE_PROVISIONING_PROFILE_BASE64 }}
+            ${{ secrets.IPAD_PROVISIONING_PROFILE_BASE64 }}
+          provisioning-profiles-base64: |
+            ${{ secrets.MAC_PROVISIONING_PROFILE_BASE64 }}
+```
+
 ## Caveats
 
 - The selected Xcode remains the default Xcode for the image for the duration of
