@@ -206,14 +206,21 @@ jobs:
           authentication-key-issuer-id: ${{ secrets.APP_STORE_CONNECT_KEY_ISSER_ID }}
 ```
 
+Certificates and provisioning profiles will be created automatically using the
+App Store Connect API. Certificates will appear in your
+[list of certificates](cert-list) as `Created via API`.
+
+Devices will be registered automatically. GitHub-hosted runners will appear in
+in your [list of devices](device-list) as `mac-NUMBER.local`.
+
 For more information on this method of code signing, please review the
 ["Distribute apps in Xcode with cloud signing"][cloud-signing] talk from WWDC21.
 
 ### Using a Specific Certificate
 
-Alternatively, if you have a code signing certificate you'd like to use, it can
-be installed to the macOS Keychain. It is automatically removed from the
-Keychain in a post action.
+If you are not able to use an App Store Connect API key, and you have a specific
+code signing certificate you'd like to use, it can be installed to the macOS
+Keychain. It is automatically removed from the Keychain in a post action.
 
 ```yaml
 jobs:
@@ -239,9 +246,10 @@ specified by your project.
 
 To disable code signing, you can specify `code-sign-identity: '-'`.
 
-## Provisioning Profiles
+### Provisioning Profiles
 
-You can specify multiple provisioning profiles for Mac using
+If you are not able to use an App Store Connect API key, and you have specific
+provisioning profiles you'd like to use, you can specify profiles for Mac
 `provisioning-profiles-base64`, or for iOS or other devices using
 `mobile-provisioning-profiles-base64`.
 
@@ -332,6 +340,8 @@ This action does not support Windows.
 [cloud-signing]: https://developer.apple.com/videos/play/wwdc2021/10204/
 [create-api-key]: https://appstoreconnect.apple.com/access/api
 [create-api-key-instructions]: https://developer.apple.com/documentation/appstoreconnectapi/creating_api_keys_for_app_store_connect_api
+[cert-list]: https://developer.apple.com/account/resources/certificates/list
+[device-list]: https://developer.apple.com/account/resources/devices/list
 [gha-xcode-list-catalina]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-10.15-Readme.md#xcode
 [gha-xcode-list-big-sur]: https://github.com/actions/virtual-environments/blob/main/images/macos/macos-11-Readme.md#xcode
 [sinoru/actions-setup-xcode]: https://github.com/sinoru/actions-setup-xcode
