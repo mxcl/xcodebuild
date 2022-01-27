@@ -460,12 +460,15 @@ export function deleteKeychain(): void {
   }
 }
 
-export async function createApiKeyFile(key: string): Promise<string> {
+export async function createAppStoreConnectApiKeyFile(
+  key: string
+): Promise<string> {
   // Avoid using a well-known path.
   const name = (await exec('/usr/bin/uuidgen')).trim()
   core.setSecret(name)
 
-  // Unfortunately, the key must be stored on disk. We remove it in a post action that calls deleteApiKeyFile.
+  // Unfortunately, the key must be stored on disk. We remove it in
+  // a post action that calls deleteAppStoreConnectApiKeyFile.
   const keyPath = `${process.env.RUNNER_TEMP}/${name}.p8`
   core.saveState('keyPath', keyPath)
   core.info('Creating App Store Connect API key file')
@@ -474,7 +477,7 @@ export async function createApiKeyFile(key: string): Promise<string> {
   return keyPath
 }
 
-export function deleteApiKeyFile() {
+export function deleteAppStoreConnectApiKeyFile() {
   const keyPath = core.getState('keyPath')
   if (keyPath && fs.existsSync(keyPath)) {
     core.info('Deleting App Store Connect API key file')

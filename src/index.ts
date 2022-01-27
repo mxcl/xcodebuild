@@ -1,9 +1,9 @@
 import {
   actionIsTestable,
-  createApiKeyFile,
+  createAppStoreConnectApiKeyFile,
   createKeychain,
   createProvisioningProfiles,
-  deleteApiKeyFile,
+  deleteAppStoreConnectApiKeyFile,
   deleteKeychain,
   deleteProvisioningProfiles,
   getAction,
@@ -52,7 +52,7 @@ async function main() {
     generateXcodeproj(reason)
   }
 
-  const apiKey = await getApiKey()
+  const apiKey = await getAppStoreConnectApiKey()
 
   await configureKeychain()
   await configureProvisioningProfiles()
@@ -110,7 +110,7 @@ async function main() {
     }
   }
 
-  async function getApiKey(): Promise<string[] | undefined> {
+  async function getAppStoreConnectApiKey(): Promise<string[] | undefined> {
     const key = core.getInput('authentication-key-base64')
     if (!key) return
 
@@ -135,7 +135,7 @@ async function main() {
     core.setSecret(keyId)
     core.setSecret(keyIssuerId)
 
-    const keyPath = await createApiKeyFile(key)
+    const keyPath = await createAppStoreConnectApiKeyFile(key)
     return [
       '-allowProvisioningDeviceRegistration',
       '-allowProvisioningUpdates',
@@ -236,7 +236,7 @@ async function main() {
 }
 
 function post() {
-  deleteApiKeyFile()
+  deleteAppStoreConnectApiKeyFile()
   deleteKeychain()
   deleteProvisioningProfiles()
 }
