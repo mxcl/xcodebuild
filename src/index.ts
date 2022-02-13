@@ -1,7 +1,11 @@
 import {
   actionIsTestable,
+  createAppStoreConnectApiKeyFile,
   createKeychain,
+  createProvisioningProfiles,
+  deleteAppStoreConnectApiKeyFile,
   deleteKeychain,
+  deleteProvisioningProfiles,
   getAction,
   getConfiguration,
   getDestination,
@@ -48,7 +52,10 @@ async function main() {
     generateXcodeproj(reason)
   }
 
+  const apiKey = await getAppStoreConnectApiKey()
+
   await configureKeychain()
+  await configureProvisioningProfiles()
 
   await build(await getScheme())
 
@@ -103,6 +110,44 @@ async function main() {
     }
   }
 
+  async function getAppStoreConnectApiKey(): Promise<string[] | undefined> {
+    const key = core.getInput('authentication-key-base64')
+    if (!key) return
+
+    if (semver.lt(selected, '13.0.0')) {
+      core.notice(
+        'Ignoring authentication-key-base64 because it requires Xcode 13 or later.'
+      )
+      return
+    }
+
+    const keyId = core.getInput('authentication-key-id')
+    const keyIssuerId = core.getInput('authentication-key-issuer-id')
+    if (!keyId || !keyIssuerId) {
+      throw new Error(
+        'authentication-key-base64 requires authentication-key-id and authentication-key-issuer-id.'
+      )
+    }
+
+    // The user should have already stored these as encrypted secrets, but we'll
+    // be paranoid on their behalf.
+    core.setSecret(key)
+    core.setSecret(keyId)
+    core.setSecret(keyIssuerId)
+
+    const keyPath = await createAppStoreConnectApiKeyFile(key)
+    return [
+      '-allowProvisioningDeviceRegistration',
+      '-allowProvisioningUpdates',
+      '-authenticationKeyPath',
+      keyPath,
+      '-authenticationKeyID',
+      keyId,
+      '-authenticationKeyIssuerID',
+      keyIssuerId,
+    ]
+  }
+
   async function configureKeychain() {
     const certificate = core.getInput('code-sign-certificate')
     if (!certificate) return
@@ -121,6 +166,16 @@ async function main() {
     await core.group('Configuring code signing', async () => {
       await createKeychain(certificate, passphrase)
     })
+  }
+
+  async function configureProvisioningProfiles() {
+    const mobileProfiles = core.getMultilineInput(
+      'mobile-provisioning-profiles-base64'
+    )
+    const profiles = core.getMultilineInput('provisioning-profiles-base64')
+    if (!mobileProfiles || !profiles) return
+
+    await createProvisioningProfiles(profiles, mobileProfiles)
   }
 
   async function build(scheme?: string) {
@@ -142,6 +197,7 @@ async function main() {
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
+      if (apiKey) args = args.concat(apiKey)
 
       args = args.concat([
         '-resultBundlePath',
@@ -180,7 +236,9 @@ async function main() {
 }
 
 function post() {
+  deleteAppStoreConnectApiKeyFile()
   deleteKeychain()
+  deleteProvisioningProfiles()
 }
 
 async function run() {

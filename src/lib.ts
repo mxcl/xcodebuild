@@ -459,3 +459,84 @@ export function deleteKeychain(): void {
     }
   }
 }
+
+export async function createAppStoreConnectApiKeyFile(
+  key: string
+): Promise<string> {
+  // Avoid using a well-known path.
+  const name = (await exec('/usr/bin/uuidgen')).trim()
+  core.setSecret(name)
+
+  // Unfortunately, the key must be stored on disk. We remove it in
+  // a post action that calls deleteAppStoreConnectApiKeyFile.
+  const keyPath = `${process.env.RUNNER_TEMP}/${name}.p8`
+  core.saveState('keyPath', keyPath)
+  core.info('Creating App Store Connect API key file')
+  fs.writeFileSync(keyPath, key, { encoding: 'base64' })
+
+  return keyPath
+}
+
+export function deleteAppStoreConnectApiKeyFile() {
+  const keyPath = core.getState('keyPath')
+  if (keyPath && fs.existsSync(keyPath)) {
+    core.info('Deleting App Store Connect API key file')
+    try {
+      fs.unlinkSync(keyPath)
+    } catch (error) {
+      core.error('Failed to delete App Store Connect API key file: ' + error)
+    }
+  }
+}
+
+export async function createProvisioningProfiles(
+  mobileProfiles: string[],
+  profiles: string[]
+) {
+  core.info('Creating provisioning profiles')
+
+  for (const profile in mobileProfiles) {
+    await createProvisioningProfile(profile, '.mobileprovision')
+  }
+
+  for (const profile in profiles) {
+    await createProvisioningProfile(profile, '.provisionprofile')
+  }
+}
+
+async function createProvisioningProfile(profile: string, extension: string) {
+  // Avoid using a well-known path.
+  const name = (await exec('/usr/bin/uuidgen')).trim()
+  core.setSecret(name)
+
+  const directory = path.join(
+    `${process.env.HOME}`,
+    'Library/MobileDevice/Provisioning Profiles'
+  )
+  fs.mkdirSync(directory, { recursive: true })
+
+  const profilePath = path.join(directory, name + extension)
+
+  // Add the new profile path to the saved state so we can delete it in post.
+  const state = JSON.parse(core.getState('provisioningProfilePaths') || '[]')
+  state.push(profilePath)
+  core.saveState('provisioningProfilePaths', state)
+
+  fs.writeFileSync(profilePath, profile, { encoding: 'base64' })
+}
+
+export function deleteProvisioningProfiles() {
+  const state = core.getState('provisioningProfilePaths')
+  if (!state) return
+
+  core.info('Deleting provisioning profiles')
+  for (const path in JSON.parse(state)) {
+    if (fs.existsSync(path)) {
+      try {
+        fs.unlinkSync(path)
+      } catch (error) {
+        core.error('Failed to delete provisioning profile: ' + error)
+      }
+    }
+  }
+}

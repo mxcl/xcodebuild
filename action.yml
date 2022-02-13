@@ -32,6 +32,33 @@ inputs:
     description: Enables code coverage
     required: false
     default: 'false'
+  authentication-key-base64:
+    description: |
+      A Base64-encoded authentication key issued by App Store Connect. If
+      specified, `xcodebuild`` will authenticate with the Apple Developer
+      website using this credential. The `authentication-key-id` and
+      `authentication-key-issuer-id` parameters are required. Using this key,
+      `xcodebuild` will register the GitHub Actions runner device and manage
+      code signing certificates for it. Please note that this may cause
+      undesired behavior when using GitHub-hosted runners. For best results, use
+      App Store Connect API keys only on self-hosted runners.
+    required: false
+  authentication-key-id:
+    description: |
+      The key identifier associated with the App Store Conect authentication key
+      specified in `authentication-key-base64`. This string can be located in
+      the users and access details for your provider at
+      "https://appstoreconnect.apple.com". For best results, use App Store
+      Connect API keys only on self-hosted runners.
+    required: false
+  authentication-key-issuer-id:
+    description: |
+      The App Store Connect issuer identifier associated with the authentication
+      key specified in `authentication-key-base64`. This string can be located
+      in the users and access details for your provider at
+      "https://appstoreconnect.apple.com". For best results, use App Store
+      Connect API keys only on self-hosted runners.
+    required: false
   code-sign-certificate:
     description: |
       A Base64-encoded certificate to be installed to the macOS Keychain for
@@ -50,6 +77,14 @@ inputs:
     description: |
       Identity to be used for code signing. If your project specifies a
       `CODE_SIGN_IDENTITY`, this will override it.
+    required: false
+  mobile-provisioning-profiles-base64:
+    description: |
+      A multiline list of Base64-encoded mobile provisioning profiles.
+    required: false
+  provisioning-profiles-base64:
+    description: |
+      A multiline list of Base64-encoded Mac provisioning profiles.
     required: false
   working-directory:
     description: '…'
