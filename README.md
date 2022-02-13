@@ -213,6 +213,9 @@ App Store Connect API. Certificates will appear in your
 Devices will be registered automatically. GitHub-hosted runners will appear in
 in your [list of devices](device-list) as `mac-NUMBER.local`.
 
+> :warning: This may cause undesired behavior when using GitHub-hosted runners.
+> For best results, use App Store Connect API keys only on self-hosted runners.
+
 For more information on this method of code signing, please review the
 ["Distribute apps in Xcode with cloud signing"][cloud-signing] talk from WWDC21.
 
