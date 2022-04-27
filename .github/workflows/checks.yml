@@ -207,6 +207,8 @@ jobs:
             os: macos-11
           - swift: ~5.5
             os: macos-11
+          - swift: ~5.6
+            os: macos-12
     steps:
       - uses: actions/checkout@v2
       - uses: ./
@@ -242,6 +244,8 @@ jobs:
         include:
           - xcode: ^10
             os: macos-10.15
+          - xcode: ^13
+            os: macos-12
           - platform: mac-catalyst
             xcode: ^13
             codecov: false
@@ -260,6 +264,7 @@ jobs:
       - run: |
           xcode-select --print-path
 
+  # lol we didn't comment on how this was different to the above and now I'm not sure
   more-xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
