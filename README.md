@@ -130,6 +130,14 @@ jobs:
       - run: … # do your own thing
 ```
 
+## Specifying `workspace`
+
+You can specify `workspace`.
+
+If you are using CocoaPods you will likely need to specify the workspace, it is NOT automatically
+deciphered for you.
+
+
 ## Specifying `scheme`
 
 You can specify `scheme`.
