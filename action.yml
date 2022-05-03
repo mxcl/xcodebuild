@@ -94,6 +94,11 @@ inputs:
       Typically `Release` or `Debug`.
       Leave unset and `xcodebuild` decides itself.
     required: false
+  workspace:
+    description: |
+      A workspace is a Xcode document that groups projects and other documents
+      so you can work on them together - required if using CocoaPods.
+    required: false
   scheme:
     description: |
       A scheme defined by an Xcode project or workspace.
