@@ -14,8 +14,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  verify-dist:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm i
+      - run: npm run prepare
+      - run: git diff --exit-code
+
   defaults:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -24,6 +33,7 @@ jobs:
 
   xcodebuild-has-exited:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -37,6 +47,7 @@ jobs:
 
   executable-runs:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -52,6 +63,7 @@ jobs:
 
   invalid-action-fails:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -67,6 +79,7 @@ jobs:
 
   invalid-platform-fails:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -82,6 +95,7 @@ jobs:
 
   invalid-swift-fails:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -97,6 +111,7 @@ jobs:
 
   invalid-xcode-fails:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -112,6 +127,7 @@ jobs:
 
   missing-api-key-id-fails:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -128,6 +144,7 @@ jobs:
 
   missing-api-key-issuer-id-fails:
     runs-on: macos-latest
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: ./
@@ -144,6 +161,7 @@ jobs:
 
   null-none-action:
     runs-on: macos-latest
+    needs: [verify-dist]
     strategy:
       matrix:
         action:
@@ -160,6 +178,7 @@ jobs:
 
   configurations:
     runs-on: macos-latest
+    needs: [verify-dist]
     strategy:
       matrix:
         configuration:
@@ -177,6 +196,7 @@ jobs:
 
   verbosity:
     runs-on: macos-latest
+    needs: [verify-dist]
     strategy:
       matrix:
         verbosity:
@@ -193,6 +213,7 @@ jobs:
   swift:
     name: swift ${{ matrix.swift }}
     runs-on: ${{ matrix.os }}
+    needs: [verify-dist]
     strategy:
       matrix:
         swift:
@@ -223,6 +244,7 @@ jobs:
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
     runs-on: ${{ matrix.os || 'macos-11' }}
+    needs: [verify-dist]
     strategy:
       matrix:
         platform:
@@ -268,6 +290,7 @@ jobs:
   more-xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    needs: [verify-dist]
     strategy:
       matrix:
         os:
@@ -298,6 +321,7 @@ jobs:
   verify-codecov:
     name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
     runs-on: macos-latest
+    needs: [verify-dist]
     strategy:
       matrix:
         platform:
@@ -325,6 +349,7 @@ jobs:
   verify-swift-version:
     name: .swift-version
     runs-on: macos-10.15
+    needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
       - uses: mxcl/get-swift-version@v1
