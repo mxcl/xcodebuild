@@ -1,8 +1,8 @@
 on:
   pull_request:
     paths:
-      - '*.ts'
-      - 'fixtures/**/*.swift'
+      - src/*.ts
+      - fixtures/**/*.swift
       - .github/workflows/checks.yml
       - dist/*
   schedule:
