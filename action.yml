@@ -101,8 +101,8 @@ inputs:
     required: false
   workspace:
     description: |
-      The name of your workspace.
-      Use this option when your scheme is contained in an Xcode workspace.
+      We try to detect your workspace, but if we fail you can manually specify
+      it with this parameter.
     required: false
   warnings-as-errors:
     description: Fails the build if any warnings in *non test targets*.
