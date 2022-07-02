@@ -17,7 +17,7 @@ jobs:
   defaults:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           working-directory: fixtures/debug
@@ -25,7 +25,7 @@ jobs:
   xcodebuild-has-exited:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           working-directory: fixtures/debug
@@ -38,7 +38,7 @@ jobs:
   executable-runs:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           action: build
@@ -53,7 +53,7 @@ jobs:
   invalid-action-fails:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: xcodebuild
         with:
@@ -68,7 +68,7 @@ jobs:
   invalid-platform-fails:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: xcodebuild
         with:
@@ -83,7 +83,7 @@ jobs:
   invalid-swift-fails:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: xcodebuild
         with:
@@ -98,7 +98,7 @@ jobs:
   invalid-xcode-fails:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: xcodebuild
         with:
@@ -113,7 +113,7 @@ jobs:
   missing-api-key-id-fails:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: xcodebuild
         with:
@@ -129,7 +129,7 @@ jobs:
   missing-api-key-issuer-id-fails:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         id: xcodebuild
         with:
@@ -152,7 +152,7 @@ jobs:
           - ''
           - none
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           working-directory: fixtures/debug
@@ -166,7 +166,7 @@ jobs:
           - debug
           - release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           configuration: ${{ matrix.configuration }}
@@ -184,7 +184,7 @@ jobs:
           - quiet
           - verbose
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           verbosity: ${{ matrix.verbosity }}
@@ -210,7 +210,7 @@ jobs:
           - swift: ~5.6
             os: macos-12
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           swift: ${{ matrix.swift }}
@@ -252,7 +252,7 @@ jobs:
             action: test
             warnings-as-errors: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
@@ -285,7 +285,7 @@ jobs:
         warnings-as-errors:
           - false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
@@ -312,7 +312,7 @@ jobs:
           - true
           - false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
@@ -326,7 +326,7 @@ jobs:
     name: .swift-version
     runs-on: macos-10.15
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: mxcl/get-swift-version@v1
         with:
           requires: '>5.1'
