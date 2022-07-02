@@ -44,6 +44,7 @@ async function main() {
   const destination = await getDestination(selected, platform)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
+  const workspace = core.getInput('workspace')
 
   core.info(`» Selected Xcode ${selected}`)
 
@@ -57,7 +58,7 @@ async function main() {
   await configureKeychain()
   await configureProvisioningProfiles()
 
-  await build(await getScheme())
+  await build(await getScheme(workspace), workspace)
 
   if (core.getInput('upload-logs') == 'always') {
     await uploadLogs()
@@ -178,22 +179,27 @@ async function main() {
     await createProvisioningProfiles(profiles, mobileProfiles)
   }
 
-  async function build(scheme?: string) {
+  async function build(scheme?: string, workspace?: string) {
     if (warningsAsErrors && actionIsTestable(action)) {
-      await xcodebuild('build', scheme)
+      await xcodebuild('build', scheme, workspace)
     }
-    await xcodebuild(action, scheme)
+    await xcodebuild(action, scheme, workspace)
   }
 
   //// helper funcs
 
-  async function xcodebuild(action?: string, scheme?: string) {
+  async function xcodebuild(
+    action?: string,
+    scheme?: string,
+    workspace?: string
+  ) {
     if (action === 'none') return
 
     const title = ['xcodebuild', action].filter((x) => x).join(' ')
     await core.group(title, async () => {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
+      if (workspace) args = args.concat(['-workspace', workspace])
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
@@ -223,14 +229,14 @@ async function main() {
   }
 
   //NOTE this is not nearly clever enough I think
-  async function getScheme(): Promise<string | undefined> {
+  async function getScheme(workspace?: string): Promise<string | undefined> {
     const scheme = core.getInput('scheme')
     if (scheme) {
       return scheme
     }
 
     if (swiftPM) {
-      return getSchemeFromPackage()
+      return getSchemeFromPackage(workspace)
     }
   }
 }

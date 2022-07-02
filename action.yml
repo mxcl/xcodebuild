@@ -99,6 +99,11 @@ inputs:
       A scheme defined by an Xcode project or workspace.
       If not specified, xcodebuild builds only the first target.
     required: false
+  workspace:
+    description: |
+      The name of your workspace.
+      Use this option when your scheme is contained in an Xcode workspace.
+    required: false
   warnings-as-errors:
     description: Fails the build if any warnings in *non test targets*.
     required: false

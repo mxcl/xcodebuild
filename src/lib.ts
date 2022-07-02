@@ -159,8 +159,12 @@ interface Schemes {
   }
 }
 
-export async function getSchemeFromPackage(): Promise<string> {
-  const out = await exec('xcodebuild', ['-list', '-json'])
+export async function getSchemeFromPackage(
+  workspace?: string
+): Promise<string> {
+  let args = ['-list', '-json']
+  if (workspace) args = args.concat(['-workspace', workspace])
+  const out = await exec('xcodebuild', args)
   const json = parseJSON<Schemes>(out)
   const schemes = (json?.workspace ?? json?.project)?.schemes
   if (!schemes || schemes.length == 0)
