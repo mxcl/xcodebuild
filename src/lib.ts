@@ -159,7 +159,9 @@ interface Schemes {
   }
 }
 
-export async function getSchemeFromPackage(workspace?: string): Promise<string> {
+export async function getSchemeFromPackage(
+  workspace?: string
+): Promise<string> {
   let args = ['-list', '-json']
   if (workspace) args = args.concat(['-workspace', workspace])
   const out = await exec('xcodebuild', args)
