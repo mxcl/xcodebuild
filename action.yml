@@ -119,6 +119,10 @@ inputs:
       Beware that artifacts count against your GitHub Actions storage limits.
     default: on-failure
     required: false
+  derivedDataPath:
+    description: |
+      Overrides the folder that should be used for derived data.
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'

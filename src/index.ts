@@ -45,6 +45,7 @@ async function main() {
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
   const workspace = core.getInput('workspace')
+  const derivedDataPath = core.getInput('derivedDataPath')
 
   core.info(`» Selected Xcode ${selected}`)
 
@@ -58,7 +59,7 @@ async function main() {
   await configureKeychain()
   await configureProvisioningProfiles()
 
-  await build(await getScheme(workspace), workspace)
+  await build(await getScheme(workspace), workspace, derivedDataPath)
 
   if (core.getInput('upload-logs') == 'always') {
     await uploadLogs()
@@ -179,11 +180,15 @@ async function main() {
     await createProvisioningProfiles(profiles, mobileProfiles)
   }
 
-  async function build(scheme?: string, workspace?: string) {
+  async function build(
+    scheme?: string,
+    workspace?: string,
+    derivedDataPath?: string
+  ) {
     if (warningsAsErrors && actionIsTestable(action)) {
-      await xcodebuild('build', scheme, workspace)
+      await xcodebuild('build', scheme, workspace, derivedDataPath)
     }
-    await xcodebuild(action, scheme, workspace)
+    await xcodebuild(action, scheme, workspace, derivedDataPath)
   }
 
   //// helper funcs
@@ -191,7 +196,8 @@ async function main() {
   async function xcodebuild(
     action?: string,
     scheme?: string,
-    workspace?: string
+    workspace?: string,
+    derivedDataPath?: string
   ) {
     if (action === 'none') return
 
@@ -204,6 +210,8 @@ async function main() {
       if (verbosity() == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
       if (apiKey) args = args.concat(apiKey)
+      if (derivedDataPath)
+        args = args.concat(['-derivedDataPath', derivedDataPath])
 
       args = args.concat([
         '-resultBundlePath',
