@@ -119,6 +119,10 @@ inputs:
       Beware that artifacts count against your GitHub Actions storage limits.
     default: on-failure
     required: false
+  symroot:
+    description: |
+      Product and build files are placed in subdirectories of this directory.
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
