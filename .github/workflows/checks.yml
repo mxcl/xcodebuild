@@ -237,7 +237,7 @@ jobs:
           swift: ${{ matrix.swift }}
           working-directory: fixtures/swift/${{ matrix.swift }}
           action: build
-      - uses: mxcl/get-swift-version@v1
+      - uses: mxcl/get-swift-version@v2
         with:
           requires: ${{ matrix.swift }}
 
@@ -352,12 +352,12 @@ jobs:
     needs: [verify-dist]
     steps:
       - uses: actions/checkout@v3
-      - uses: mxcl/get-swift-version@v1
+      - uses: mxcl/get-swift-version@v2
         with:
           requires: '>5.1'
       - uses: ./
         with:
           working-directory: fixtures/dot-swift-version
-      - uses: mxcl/get-swift-version@v1
+      - uses: mxcl/get-swift-version@v2
         with:
           requires: ~5.1
