@@ -6,21 +6,21 @@
     "prepare": "npm run lint && ncc build src/index.ts --minify --source-map"
   },
   "dependencies": {
-    "@actions/artifact": "^0.6.1",
+    "@actions/artifact": "^1.1.1",
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
     "semver": "^7.3.5"
   },
   "devDependencies": {
     "@tsconfig/node16": "^1.0.2",
-    "@types/node": "^16.11.24",
+    "@types/node": "^18.15.5",
     "@types/semver": "^7.3.9",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
-    "@vercel/ncc": "^0.33.3",
+    "@vercel/ncc": "^0.36.1",
     "eslint": "^8.9.0",
     "eslint-config-prettier": "^8.3.0",
-    "prettier": "2.5.1",
-    "typescript": "^4.5.5"
+    "prettier": "^2.8.6",
+    "typescript": "^5.0.2"
   }
 }
