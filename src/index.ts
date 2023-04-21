@@ -176,7 +176,7 @@ async function main() {
     const profiles = core.getMultilineInput('provisioning-profiles-base64')
     if (!mobileProfiles || !profiles) return
 
-    await createProvisioningProfiles(profiles, mobileProfiles)
+    await createProvisioningProfiles(mobileProfiles, profiles)
   }
 
   async function build(scheme?: string, workspace?: string) {
