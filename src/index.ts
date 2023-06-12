@@ -15,7 +15,7 @@ import {
   verbosity,
   xcselect,
 } from './lib'
-import type { Platform } from './lib'
+import type { Arch, Platform } from './lib'
 import xcodebuildX from './xcodebuild'
 import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
@@ -34,6 +34,7 @@ async function main() {
 
   const swiftPM = fs.existsSync('Package.swift')
   const platform = getPlatformInput('platform')
+  const arch = getArchInput('arch')
   const selected = await xcselect(
     getRangeInput('xcode'),
     getRangeInput('swift')
@@ -41,7 +42,7 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(selected, platform)
+  const destination = await getDestination(selected, platform, arch)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
   const workspace = core.getInput('workspace')
@@ -70,6 +71,12 @@ async function main() {
     const value = core.getInput(input)
     if (!value) return undefined
     return value as Platform
+  }
+
+  function getArchInput(input: string): Arch | undefined {
+    const value = core.getInput(input)
+    if (!value) return undefined
+    return value as Arch
   }
 
   function getRangeInput(input: string): Range | undefined {

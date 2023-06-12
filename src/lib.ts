@@ -292,6 +292,8 @@ export function getConfiguration(): string {
 
 export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | 'mac-catalyst'
 
+export type Arch = 'arm64' | 'x86_64' | 'i386'
+
 export function getAction(
   xcodeVersion: SemVer,
   platform?: Platform
@@ -315,19 +317,23 @@ export function actionIsTestable(action?: string): boolean {
 
 export async function getDestination(
   xcodeVersion: SemVer,
-  platform?: Platform
+  platform?: Platform,
+  arch?: Arch
 ): Promise<string[]> {
   switch (platform) {
     case 'iOS':
     case 'tvOS':
     case 'watchOS': {
       const id = (await destinations())[platform]
-      return ['-destination', `id=${id}`]
+      return ['-destination', `id=${id}${getDestinationArch(arch)}`]
     }
     case 'macOS':
-      return ['-destination', 'platform=macOS']
+      return ['-destination', `platform=macOS${getDestinationArch(arch)}`]
     case 'mac-catalyst':
-      return ['-destination', 'platform=macOS,variant=Mac Catalyst']
+      return [
+        '-destination',
+        `platform=macOS,variant=Mac Catalyst${getDestinationArch(arch)}`,
+      ]
     case undefined:
       if (semver.gte(xcodeVersion, '13.0.0')) {
         //FIXME should parse output from xcodebuild -showdestinations
@@ -356,6 +362,10 @@ export function getIdentity(
     core.notice('Disabling code signing for Mac Catalyst.')
     return 'CODE_SIGN_IDENTITY=-'
   }
+}
+
+function getDestinationArch(arch: Arch | undefined): string {
+  return arch ? `,arch=${arch}` : ''
 }
 
 // In order to avoid exposure to command line audit logging, we pass commands in
