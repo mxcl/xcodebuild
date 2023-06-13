@@ -193,7 +193,7 @@ function parseJSON<T>(input: string): T {
   }
 }
 
-async function destinations(): Promise<Destination> {
+async function destinations(arch: Arch | undefined): Promise<Destination> {
   const out = await exec('xcrun', [
     'simctl',
     'list',
@@ -214,9 +214,9 @@ async function destinations(): Promise<Destination> {
   }
 
   return {
-    tvOS: rv.tvOS?.id,
-    watchOS: rv.watchOS?.id,
-    iOS: rv.iOS?.id,
+    tvOS: withArch(rv.tvOS?.id, arch),
+    watchOS: withArch(rv.watchOS?.id, arch),
+    iOS: withArch(rv.iOS?.id, arch),
   }
 
   function parse(key: string): [DeviceType, SemVer?] {
@@ -224,6 +224,10 @@ async function destinations(): Promise<Destination> {
     const v = semver.coerce(vv.join('.'))
     return [type as DeviceType, v ?? undefined]
   }
+}
+
+function withArch(id: string, arch: Arch | undefined): string {
+  return arch ? `${id},arch=${arch}` : id
 }
 
 async function exec(
@@ -324,15 +328,15 @@ export async function getDestination(
     case 'iOS':
     case 'tvOS':
     case 'watchOS': {
-      const id = (await destinations())[platform]
-      return ['-destination', `id=${id}${getDestinationArch(arch)}`]
+      const id = (await destinations(arch))[platform]
+      return ['-destination', `id=${id}`]
     }
     case 'macOS':
-      return ['-destination', `platform=macOS${getDestinationArch(arch)}`]
+      return ['-destination', `platform=macOS`]
     case 'mac-catalyst':
       return [
         '-destination',
-        `platform=macOS,variant=Mac Catalyst${getDestinationArch(arch)}`,
+        `platform=macOS,variant=Mac Catalyst`,
       ]
     case undefined:
       if (semver.gte(xcodeVersion, '13.0.0')) {
@@ -362,10 +366,6 @@ export function getIdentity(
     core.notice('Disabling code signing for Mac Catalyst.')
     return 'CODE_SIGN_IDENTITY=-'
   }
-}
-
-function getDestinationArch(arch: Arch | undefined): string {
-  return arch ? `,arch=${arch}` : ''
 }
 
 // In order to avoid exposure to command line audit logging, we pass commands in

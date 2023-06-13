@@ -48,6 +48,7 @@ async function main() {
   const workspace = core.getInput('workspace')
 
   core.info(`» Selected Xcode ${selected}`)
+  core.info(`» Selected Arch ${arch}`)
 
   const reason: string | false = shouldGenerateXcodeproj()
   if (reason) {

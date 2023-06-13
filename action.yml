@@ -22,6 +22,7 @@ inputs:
     description: |
       Either `arm64` `x86_64 `i386`
       Leave unset and `xcodebuild` decides itself.
+    required: false
   action:
     description: |
       * The most common actions are `test`, `build`.
