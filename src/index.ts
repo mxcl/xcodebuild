@@ -207,7 +207,7 @@ async function main() {
     await core.group(title, async () => {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
-      if (arch) args = args.concat(['-arch', arch])
+      if (arch) args = args.concat([`-arch=${arch}`])
       if (workspace) args = args.concat(['-workspace', workspace])
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
