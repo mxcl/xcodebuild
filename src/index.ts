@@ -42,7 +42,7 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(selected, platform, arch)
+  const destination = await getDestination(selected, platform)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
   const workspace = core.getInput('workspace')
@@ -59,7 +59,7 @@ async function main() {
   await configureKeychain()
   await configureProvisioningProfiles()
 
-  await build(await getScheme(workspace), workspace)
+  await build(await getScheme(workspace), workspace, arch)
 
   if (core.getInput('upload-logs') == 'always') {
     await uploadLogs()
@@ -186,11 +186,11 @@ async function main() {
     await createProvisioningProfiles(mobileProfiles, profiles)
   }
 
-  async function build(scheme?: string, workspace?: string) {
+  async function build(scheme?: string, workspace?: string, arch?: Arch) {
     if (warningsAsErrors && actionIsTestable(action)) {
-      await xcodebuild('build', scheme, workspace)
+      await xcodebuild('build', scheme, workspace, arch)
     }
-    await xcodebuild(action, scheme, workspace)
+    await xcodebuild(action, scheme, workspace, arch)
   }
 
   //// helper funcs
@@ -198,7 +198,8 @@ async function main() {
   async function xcodebuild(
     action?: string,
     scheme?: string,
-    workspace?: string
+    workspace?: string,
+    arch?: Arch
   ) {
     if (action === 'none') return
 
@@ -206,6 +207,7 @@ async function main() {
     await core.group(title, async () => {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
+      if (arch) args = args.concat(['-arch', arch])
       if (workspace) args = args.concat(['-workspace', workspace])
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')

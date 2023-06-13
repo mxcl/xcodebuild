@@ -193,7 +193,7 @@ function parseJSON<T>(input: string): T {
   }
 }
 
-async function destinations(arch: Arch | undefined): Promise<Destination> {
+async function destinations(): Promise<Destination> {
   const out = await exec('xcrun', [
     'simctl',
     'list',
@@ -214,9 +214,9 @@ async function destinations(arch: Arch | undefined): Promise<Destination> {
   }
 
   return {
-    tvOS: withArch(rv.tvOS?.id, arch),
-    watchOS: withArch(rv.watchOS?.id, arch),
-    iOS: withArch(rv.iOS?.id, arch),
+    tvOS: rv.tvOS?.id,
+    watchOS: rv.watchOS?.id,
+    iOS: rv.iOS?.id,
   }
 
   function parse(key: string): [DeviceType, SemVer?] {
@@ -224,10 +224,6 @@ async function destinations(arch: Arch | undefined): Promise<Destination> {
     const v = semver.coerce(vv.join('.'))
     return [type as DeviceType, v ?? undefined]
   }
-}
-
-function withArch(id: string, arch: Arch | undefined): string {
-  return arch ? `${id},arch=${arch}` : id
 }
 
 async function exec(
@@ -321,14 +317,13 @@ export function actionIsTestable(action?: string): boolean {
 
 export async function getDestination(
   xcodeVersion: SemVer,
-  platform?: Platform,
-  arch?: Arch
+  platform?: Platform
 ): Promise<string[]> {
   switch (platform) {
     case 'iOS':
     case 'tvOS':
     case 'watchOS': {
-      const id = (await destinations(arch))[platform]
+      const id = (await destinations())[platform]
       return ['-destination', `id=${id}`]
     }
     case 'macOS':
