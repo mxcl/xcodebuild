@@ -15,7 +15,7 @@ import {
   verbosity,
   xcselect,
 } from './lib'
-import type { Platform } from './lib'
+import type { Arch, Platform } from './lib'
 import xcodebuildX from './xcodebuild'
 import * as artifact from '@actions/artifact'
 import * as core from '@actions/core'
@@ -34,6 +34,7 @@ async function main() {
 
   const swiftPM = fs.existsSync('Package.swift')
   const platform = getPlatformInput('platform')
+  const arch = getArchInput('arch')
   const selected = await xcselect(
     getRangeInput('xcode'),
     getRangeInput('swift')
@@ -58,7 +59,7 @@ async function main() {
   await configureKeychain()
   await configureProvisioningProfiles()
 
-  await build(await getScheme(workspace), workspace)
+  await build(await getScheme(workspace), workspace, arch)
 
   if (core.getInput('upload-logs') == 'always') {
     await uploadLogs()
@@ -70,6 +71,12 @@ async function main() {
     const value = core.getInput(input)
     if (!value) return undefined
     return value as Platform
+  }
+
+  function getArchInput(input: string): Arch | undefined {
+    const value = core.getInput(input)
+    if (!value) return undefined
+    return value as Arch
   }
 
   function getRangeInput(input: string): Range | undefined {
@@ -179,11 +186,11 @@ async function main() {
     await createProvisioningProfiles(mobileProfiles, profiles)
   }
 
-  async function build(scheme?: string, workspace?: string) {
+  async function build(scheme?: string, workspace?: string, arch?: Arch) {
     if (warningsAsErrors && actionIsTestable(action)) {
-      await xcodebuild('build', scheme, workspace)
+      await xcodebuild('build', scheme, workspace, arch)
     }
-    await xcodebuild(action, scheme, workspace)
+    await xcodebuild(action, scheme, workspace, arch)
   }
 
   //// helper funcs
@@ -191,7 +198,8 @@ async function main() {
   async function xcodebuild(
     action?: string,
     scheme?: string,
-    workspace?: string
+    workspace?: string,
+    arch?: Arch
   ) {
     if (action === 'none') return
 
@@ -199,6 +207,7 @@ async function main() {
     await core.group(title, async () => {
       let args = destination
       if (scheme) args = args.concat(['-scheme', scheme])
+      if (arch) args = args.concat([`-arch=${arch}`])
       if (workspace) args = args.concat(['-workspace', workspace])
       if (identity) args = args.concat(identity)
       if (verbosity() == 'quiet') args.push('-quiet')
