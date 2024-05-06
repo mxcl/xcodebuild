@@ -147,7 +147,7 @@ interface Devices {
   }
 }
 
-type DeviceType = 'watchOS' | 'tvOS' | 'iOS'
+type DeviceType = 'watchOS' | 'tvOS' | 'iOS' | 'xrOS'
 type Destination = { [key: string]: string }
 
 interface Schemes {
@@ -217,6 +217,7 @@ async function destinations(): Promise<Destination> {
     tvOS: rv.tvOS?.id,
     watchOS: rv.watchOS?.id,
     iOS: rv.iOS?.id,
+    visionOS: rv.xrOS?.id,
   }
 
   function parse(key: string): [DeviceType, SemVer?] {
@@ -290,7 +291,13 @@ export function getConfiguration(): string {
   }
 }
 
-export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | 'mac-catalyst'
+export type Platform =
+  | 'watchOS'
+  | 'iOS'
+  | 'tvOS'
+  | 'macOS'
+  | 'mac-catalyst'
+  | 'visionOS'
 
 export function getAction(
   xcodeVersion: SemVer,
@@ -320,7 +327,8 @@ export async function getDestination(
   switch (platform) {
     case 'iOS':
     case 'tvOS':
-    case 'watchOS': {
+    case 'watchOS':
+    case 'visionOS': {
       const id = (await destinations())[platform]
       return ['-destination', `id=${id}`]
     }
