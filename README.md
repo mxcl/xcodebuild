@@ -20,7 +20,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
       # ^^ this is the simplest use, runs tests for whatever platform `xcodebuild` picks
 ```
 
@@ -37,7 +37,7 @@ jobs:
           - iOS
           - mac-catalyst
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           platform: ${{ matrix.platform }}
 ```
@@ -58,7 +58,7 @@ jobs:
           - ^12
     runs-on: macos-10.15
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           xcode: ${{ matrix.xcode }}
           platform: ${{ matrix.platform }}
@@ -81,7 +81,7 @@ jobs:
           - ~5.4
           - ^6
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           swift: ${{ matrix.swift }}
           # ^^ mxcl/xcodebuild selects the newest Xcode that provides the requested Swift
@@ -112,7 +112,7 @@ jobs:
           - swift: ~5.5
             os: macos-11 # Xcode 13
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           swift: ${{ matrix.swift }}
 ```
@@ -124,7 +124,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           action: none
       - run: … # do your own thing
@@ -206,7 +206,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           authentication-key-base64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
           authentication-key-id: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -237,7 +237,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           code-sign-certificate: ${{ secrets.CERTIFICATE_BASE64 }}
           code-sign-certificate-passphrase: ${{ secrets.CERTIFICATE_PASSPHRASE}}
@@ -272,7 +272,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: mxcl/xcodebuild@v1
+      - uses: mxcl/xcodebuild@v3
         with:
           mobile-provisioning-profiles-base64: |
             ${{ secrets.IPHONE_PROVISIONING_PROFILE_BASE64 }}
