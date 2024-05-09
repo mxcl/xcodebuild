@@ -273,6 +273,11 @@ jobs:
             codecov: false
             action: test
             warnings-as-errors: false
+          - platform: visionOS
+            xcode: ^15
+            codecov: false
+            action: test
+            warnings-as-errors: false
     steps:
       - uses: actions/checkout@v3
       - uses: ./

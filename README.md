@@ -36,6 +36,7 @@ jobs:
           - tvOS
           - iOS
           - mac-catalyst
+          - visionOS
     steps:
       - uses: mxcl/xcodebuild@v3
         with:
