@@ -42,7 +42,8 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(selected, platform)
+  const osVersion = getRangeInput('os-version')
+  const destination = await getDestination(selected, platform, osVersion)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
   const workspace = core.getInput('workspace')

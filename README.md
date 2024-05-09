@@ -74,6 +74,25 @@ jobs:
 ```yaml
 jobs:
   build:
+    strategy:
+      matrix:
+        platform:
+          - iOS
+        os-version:
+          - ^15
+          - ^16
+          - ^17
+    runs-on: macos-latest
+    steps:
+      - uses: mxcl/xcodebuild@v3
+        with:
+          os-version: ${{ matrix.os-version }}
+          platform: ${{ matrix.platform }}
+```
+
+```yaml
+jobs:
+  build:
     runs-on: macos-11
     strategy:
       matrix:

@@ -259,6 +259,8 @@ jobs:
         warnings-as-errors:
           - false
         include:
+          - platform: iOS
+            os-version: ^16
           - platform: mac-catalyst
             xcode: ^13
             codecov: false

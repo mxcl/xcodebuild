@@ -142,13 +142,18 @@ interface Devices {
     [key: string]: [
       {
         udid: string
+        name: string
       }
     ]
   }
 }
 
 type DeviceType = 'watchOS' | 'tvOS' | 'iOS' | 'xrOS'
-type Destination = { [key: string]: string }
+type Destination = {
+  id: string
+  name: string | undefined
+  version: SemVer
+}
 
 interface Schemes {
   workspace?: {
@@ -193,7 +198,10 @@ function parseJSON<T>(input: string): T {
   }
 }
 
-async function destinations(): Promise<Destination> {
+async function destination(
+  deviceType: DeviceType,
+  version?: Range
+): Promise<Destination | undefined> {
   const out = await exec('xcrun', [
     'simctl',
     'list',
@@ -203,22 +211,23 @@ async function destinations(): Promise<Destination> {
   ])
   const devices = parseJSON<Devices>(out).devices
 
-  const rv: { [key: string]: { v: SemVer; id: string } } = {}
+  // best match
+  let bm: Destination | undefined
   for (const opaqueIdentifier in devices) {
     const device = (devices[opaqueIdentifier] ?? [])[0]
     if (!device) continue
     const [type, v] = parse(opaqueIdentifier)
-    if (v && (!rv[type] || semver.lt(rv[type].v, v))) {
-      rv[type] = { v, id: device.udid }
+    if (
+      v &&
+      type === deviceType &&
+      (!version || version.test(v)) &&
+      (!bm || semver.lt(bm.version, v))
+    ) {
+      bm = { id: device.udid, name: device.name, version: v }
     }
   }
 
-  return {
-    tvOS: rv.tvOS?.id,
-    watchOS: rv.watchOS?.id,
-    iOS: rv.iOS?.id,
-    visionOS: rv.xrOS?.id,
-  }
+  return bm
 
   function parse(key: string): [DeviceType, SemVer?] {
     const [type, ...vv] = (key.split('.').pop() ?? '').split('-')
@@ -324,15 +333,24 @@ export function actionIsTestable(action?: string): boolean {
 
 export async function getDestination(
   xcodeVersion: SemVer,
-  platform?: Platform
+  platform?: Platform,
+  osVersion?: Range
 ): Promise<string[]> {
   switch (platform) {
     case 'iOS':
     case 'tvOS':
     case 'watchOS':
     case 'visionOS': {
-      const id = (await destinations())[platform]
-      return ['-destination', `id=${id}`]
+      const deviceType: DeviceType = platform === 'visionOS' ? 'xrOS' : platform
+      const dest = await destination(deviceType, osVersion)
+      if (!dest) {
+        core.error(
+          `Device not found (platform: ${platform}, OS version: ${osVersion})`
+        )
+        return []
+      }
+      core.info(`Selected device: ${dest.name} (${dest.version})`)
+      return ['-destination', `id=${dest.id}`]
     }
     case 'macOS':
       return ['-destination', `platform=macOS`]
