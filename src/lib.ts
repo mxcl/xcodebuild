@@ -499,11 +499,11 @@ export async function createProvisioningProfiles(
 ) {
   core.info('Creating provisioning profiles')
 
-  for (const profile in mobileProfiles) {
+  for (const profile of mobileProfiles) {
     await createProvisioningProfile(profile, '.mobileprovision')
   }
 
-  for (const profile in profiles) {
+  for (const profile of profiles) {
     await createProvisioningProfile(profile, '.provisionprofile')
   }
 }
