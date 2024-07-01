@@ -290,7 +290,7 @@ export function getConfiguration(): string {
   }
 }
 
-export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | 'mac-catalyst'
+export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | 'mac-catalyst' | 'visionOS'
 
 export function getAction(
   xcodeVersion: SemVer,
