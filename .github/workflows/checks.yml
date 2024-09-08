@@ -177,7 +177,7 @@ jobs:
           action: ${{ matrix.action }}
 
   configurations:
-    runs-on: macos-latest
+    runs-on: macos-12
     needs: [verify-dist]
     strategy:
       matrix:
@@ -211,39 +211,36 @@ jobs:
           working-directory: fixtures/debug
 
   swift:
-    name: swift ${{ matrix.swift }}
-    runs-on: ${{ matrix.os }}
+    name: swift ${{ matrix.x.swift }}
+    runs-on: ${{ matrix.x.os }}
     needs: [verify-dist]
     strategy:
       matrix:
-        swift:
-          - ~5.0
-          - ~5.1
-          - ~5.2
-          - ~5.3
-        os:
-          - macos-10.15
-        include:
-          - swift: ~5.4
-            os: macos-11
+        x:
           - swift: ~5.5
-            os: macos-11
+            os: macos-12
           - swift: ~5.6
             os: macos-12
+          - swift: ~5.7
+            os: macos-13
+          - swift: ~5.8
+            os: macos-14
+          - swift: ~5.9
+            os: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: ./
         with:
-          swift: ${{ matrix.swift }}
-          working-directory: fixtures/swift/${{ matrix.swift }}
+          swift: ${{ matrix.x.swift }}
+          working-directory: fixtures/swift/${{ matrix.x.swift }}
           action: build
       - uses: mxcl/get-swift-version@v2
         with:
-          requires: ${{ matrix.swift }}
+          requires: ${{ matrix.x.swift }}
 
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
-    runs-on: ${{ matrix.os || 'macos-11' }}
+    runs-on: ${{ matrix.os || 'macos-12' }}
     needs: [verify-dist]
     strategy:
       matrix:
@@ -253,10 +250,8 @@ jobs:
           - macOS
           - watchOS
         xcode:
-          - ^10
-          - ^11
-          - ^12
           - ^13
+          - ^14
         codecov:
           - false
         action:
@@ -264,16 +259,13 @@ jobs:
         warnings-as-errors:
           - false
         include:
-          - xcode: ^10
-            os: macos-10.15
-          - xcode: ^13
-            os: macos-12
           - platform: mac-catalyst
             xcode: ^13
             codecov: false
             action: test
             warnings-as-errors: false
           - platform: visionOS
+            os: macos-14
             xcode: ^15
             codecov: false
             action: test
@@ -299,12 +291,11 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-10.15
-          - macos-11
+          - macos-12
         platform:
           - watchOS
         xcode:
-          - ^12
+          - ^13
         codecov:
           - false
         action:
@@ -325,7 +316,7 @@ jobs:
 
   verify-codecov:
     name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
-    runs-on: macos-latest
+    runs-on: macos-12
     needs: [verify-dist]
     strategy:
       matrix:
@@ -345,24 +336,23 @@ jobs:
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
-          xcode: ${{ matrix.xcode }}
           working-directory: fixtures/${{ matrix.platform }}
           code-coverage: ${{ matrix.codecov }}
           action: ${{ matrix.action }}
           warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
-  verify-swift-version:
+  verify-dot-swift-version:
     name: .swift-version
-    runs-on: macos-10.15
+    runs-on: macos-14
     needs: [verify-dist]
     steps:
       - uses: actions/checkout@v4
       - uses: mxcl/get-swift-version@v2
         with:
-          requires: '>5.1'
+          requires: '>5.8'
       - uses: ./
         with:
           working-directory: fixtures/dot-swift-version
       - uses: mxcl/get-swift-version@v2
         with:
-          requires: ~5.1
+          requires: ~5.9
