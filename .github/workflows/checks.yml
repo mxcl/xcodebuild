@@ -17,7 +17,7 @@ jobs:
   verify-dist:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: npm i
       - run: npm run prepare
       - run: git diff --exit-code
@@ -26,7 +26,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           working-directory: fixtures/debug
@@ -35,7 +35,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           working-directory: fixtures/debug
@@ -49,7 +49,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           action: build
@@ -65,7 +65,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         id: xcodebuild
         with:
@@ -81,7 +81,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         id: xcodebuild
         with:
@@ -97,7 +97,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         id: xcodebuild
         with:
@@ -113,7 +113,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         id: xcodebuild
         with:
@@ -129,7 +129,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         id: xcodebuild
         with:
@@ -146,7 +146,7 @@ jobs:
     runs-on: macos-latest
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         id: xcodebuild
         with:
@@ -170,7 +170,7 @@ jobs:
           - ''
           - none
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           working-directory: fixtures/debug
@@ -185,7 +185,7 @@ jobs:
           - debug
           - release
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           configuration: ${{ matrix.configuration }}
@@ -204,7 +204,7 @@ jobs:
           - quiet
           - verbose
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           verbosity: ${{ matrix.verbosity }}
@@ -231,7 +231,7 @@ jobs:
           - swift: ~5.6
             os: macos-12
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           swift: ${{ matrix.swift }}
@@ -279,7 +279,7 @@ jobs:
             action: test
             warnings-as-errors: false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
@@ -313,7 +313,7 @@ jobs:
         warnings-as-errors:
           - false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
@@ -341,7 +341,7 @@ jobs:
           - true
           - false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
@@ -356,7 +356,7 @@ jobs:
     runs-on: macos-10.15
     needs: [verify-dist]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: mxcl/get-swift-version@v2
         with:
           requires: '>5.1'
