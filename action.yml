@@ -14,7 +14,7 @@ inputs:
     required: false
   platform:
     description: |
-      Either `iOS`, `tvOS`, `macOS`, `watchOS` or (more rarely)
+      Either `iOS`, `tvOS`, `macOS`, `watchOS`, `visionOS` or (more rarely)
       `mac-catalyst`
       Leave unset and `xcodebuild` decides itself.
     required: false
