@@ -299,6 +299,8 @@ export type Platform =
   | 'mac-catalyst'
   | 'visionOS'
 
+export type Arch = 'arm64' | 'x86_64' | 'i386'
+
 export function getAction(
   xcodeVersion: SemVer,
   platform?: Platform
@@ -333,9 +335,9 @@ export async function getDestination(
       return ['-destination', `id=${id}`]
     }
     case 'macOS':
-      return ['-destination', 'platform=macOS']
+      return ['-destination', `platform=macOS`]
     case 'mac-catalyst':
-      return ['-destination', 'platform=macOS,variant=Mac Catalyst']
+      return ['-destination', `platform=macOS,variant=Mac Catalyst`]
     case undefined:
       if (semver.gte(xcodeVersion, '13.0.0')) {
         //FIXME should parse output from xcodebuild -showdestinations
