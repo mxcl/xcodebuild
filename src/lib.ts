@@ -147,7 +147,7 @@ interface Devices {
   }
 }
 
-type DeviceType = 'watchOS' | 'tvOS' | 'iOS'
+type DeviceType = 'watchOS' | 'tvOS' | 'iOS' | 'xrOS'
 type Destination = { [key: string]: string }
 
 interface Schemes {
@@ -217,6 +217,7 @@ async function destinations(): Promise<Destination> {
     tvOS: rv.tvOS?.id,
     watchOS: rv.watchOS?.id,
     iOS: rv.iOS?.id,
+    visionOS: rv.xrOS?.id,
   }
 
   function parse(key: string): [DeviceType, SemVer?] {
@@ -290,7 +291,13 @@ export function getConfiguration(): string {
   }
 }
 
-export type Platform = 'watchOS' | 'iOS' | 'tvOS' | 'macOS' | 'mac-catalyst'
+export type Platform =
+  | 'watchOS'
+  | 'iOS'
+  | 'tvOS'
+  | 'macOS'
+  | 'mac-catalyst'
+  | 'visionOS'
 
 export type Arch = 'arm64' | 'x86_64' | 'i386'
 
@@ -322,7 +329,8 @@ export async function getDestination(
   switch (platform) {
     case 'iOS':
     case 'tvOS':
-    case 'watchOS': {
+    case 'watchOS':
+    case 'visionOS': {
       const id = (await destinations())[platform]
       return ['-destination', `id=${id}`]
     }
@@ -501,11 +509,11 @@ export async function createProvisioningProfiles(
 ) {
   core.info('Creating provisioning profiles')
 
-  for (const profile in mobileProfiles) {
+  for (const profile of mobileProfiles) {
     await createProvisioningProfile(profile, '.mobileprovision')
   }
 
-  for (const profile in profiles) {
+  for (const profile of profiles) {
     await createProvisioningProfile(profile, '.provisionprofile')
   }
 }
