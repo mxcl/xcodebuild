@@ -41,7 +41,7 @@ inputs:
   code-coverage:
     description: Enables code coverage
     required: false
-    default: "false"
+    default: 'false'
   authentication-key-base64:
     description: |
       A Base64-encoded authentication key issued by App Store Connect. If
@@ -97,7 +97,7 @@ inputs:
       A multiline list of Base64-encoded Mac provisioning profiles.
     required: false
   working-directory:
-    description: "…"
+    description: '…'
     required: false
   configuration:
     description: |
@@ -117,7 +117,7 @@ inputs:
   warnings-as-errors:
     description: Fails the build if any warnings in *non test targets*.
     required: false
-    default: "false"
+    default: 'false'
   verbosity:
     description: One of `xcpretty`, `quiet` or `verbose`.
     default: xcpretty
@@ -130,7 +130,7 @@ inputs:
     default: on-failure
     required: false
 runs:
-  using: "node20"
-  main: "dist/index.js"
-  post: "dist/index.js"
+  using: 'node20'
+  main: 'dist/index.js'
+  post: 'dist/index.js'
   post-if: runner.os == 'macOS'
