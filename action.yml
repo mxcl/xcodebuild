@@ -18,15 +18,15 @@ inputs:
       `mac-catalyst`
       Leave unset and `xcodebuild` decides itself.
     required: false
+  platform-version:
+    description: |
+      A semantic version range, eg. ^15, ~16.1 or 17.4.1
+      Leave unset for the latest available on the runner.
+    required: false
   arch:
     description: |
       Either `arm64` `x86_64 `i386`
       Leave unset and `xcodebuild` decides itself.
-    required: false
-  os-version:
-    description: |
-      A semantic version range, eg. ^15, ~16.1 or 17.4.1
-      Leave unset for the latest available on the runner.
     required: false
   action:
     description: |

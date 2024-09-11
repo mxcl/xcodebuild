@@ -334,7 +334,7 @@ export function actionIsTestable(action?: string): boolean {
 export async function getDestination(
   xcodeVersion: SemVer,
   platform?: Platform,
-  osVersion?: Range
+  platformVersion?: Range
 ): Promise<string[]> {
   switch (platform) {
     case 'iOS':
@@ -342,10 +342,10 @@ export async function getDestination(
     case 'watchOS':
     case 'visionOS': {
       const deviceType: DeviceType = platform === 'visionOS' ? 'xrOS' : platform
-      const dest = await destination(deviceType, osVersion)
+      const dest = await destination(deviceType, platformVersion)
       if (!dest) {
         core.error(
-          `Device not found (platform: ${platform}, OS version: ${osVersion})`
+          `Device not found (platform: ${platform}, version: ${platformVersion})`
         )
         return []
       }

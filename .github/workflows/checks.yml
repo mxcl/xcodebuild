@@ -260,7 +260,7 @@ jobs:
           - false
         include:
           - platform: iOS
-            os-version: ^16
+            platform-version: ^16
           - platform: mac-catalyst
             xcode: ^13
             codecov: false
@@ -277,6 +277,7 @@ jobs:
       - uses: ./
         with:
           platform: ${{ matrix.platform }}
+          platform-version: ${{ matrix.platform-version }}
           xcode: ${{ matrix.xcode }}
           working-directory: fixtures/${{ matrix.platform }}
           code-coverage: ${{ matrix.codecov }}

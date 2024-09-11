@@ -78,7 +78,7 @@ jobs:
       matrix:
         platform:
           - iOS
-        os-version:
+        platform-version:
           - ^15
           - ^16
           - ^17
@@ -86,7 +86,7 @@ jobs:
     steps:
       - uses: mxcl/xcodebuild@v3
         with:
-          os-version: ${{ matrix.os-version }}
+          platform-version: ${{ matrix.platform-version }}
           platform: ${{ matrix.platform }}
 ```
 
