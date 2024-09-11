@@ -239,7 +239,7 @@ jobs:
           requires: ${{ matrix.x.swift }}
 
   xcode:
-    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}})
+    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.job-name-sufix }})
     runs-on: ${{ matrix.os || 'macos-12' }}
     needs: [verify-dist]
     strategy:
@@ -259,8 +259,11 @@ jobs:
         warnings-as-errors:
           - false
         include:
-          - platform: iOS
+          - job-name-sufix: ', platform-version ^16'
+            platform: iOS
             platform-version: ^16
+            os: macos-14
+            xcode: ^14
           - platform: mac-catalyst
             xcode: ^13
             codecov: false
