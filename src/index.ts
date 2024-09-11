@@ -34,6 +34,7 @@ async function main() {
 
   const swiftPM = fs.existsSync('Package.swift')
   const platform = getPlatformInput('platform')
+  const platformVersion = getRangeInput('platform-version')
   const arch = getArchInput('arch')
   const selected = await xcselect(
     getRangeInput('xcode'),
@@ -42,7 +43,7 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(selected, platform)
+  const destination = await getDestination(selected, platform, platformVersion)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const xcpretty = verbosity() == 'xcpretty'
   const workspace = core.getInput('workspace')
