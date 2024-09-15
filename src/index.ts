@@ -233,7 +233,7 @@ async function main() {
       }
 
       if (core.getBooleanInput('trust-plugins')) {
-        args = args.concat(['-skipPackagePluginValidation', 'YES'])
+        args.push('-skipPackagePluginValidation')
       }
 
       if (action) args.push(action)
