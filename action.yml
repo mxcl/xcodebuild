@@ -129,6 +129,12 @@ inputs:
       Beware that artifacts count against your GitHub Actions storage limits.
     default: on-failure
     required: false
+  trust-plugins:
+    description: |
+      Skip Swift Package Manager build plugin validation.
+      This may be a security risk.
+    default: 'false'
+    required: false
 runs:
   using: 'node20'
   main: 'dist/index.js'

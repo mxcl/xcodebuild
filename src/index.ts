@@ -232,6 +232,10 @@ async function main() {
           break
       }
 
+      if (core.getBooleanInput('trust-plugins')) {
+        args.push('-skipPackagePluginValidation')
+      }
+
       if (action) args.push(action)
 
       await xcodebuildX(args, xcpretty)
