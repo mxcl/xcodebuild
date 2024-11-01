@@ -268,10 +268,13 @@ async function exec(
   }
 }
 
-export function verbosity(): 'xcpretty' | 'quiet' | 'verbose' {
+export type Verbosity = 'xcpretty' | 'xcbeautify' | 'quiet' | 'verbose'
+
+export function verbosity(): Verbosity {
   const value = core.getInput('verbosity')
   switch (value) {
     case 'xcpretty':
+    case 'xcbeautify':
     case 'quiet':
     case 'verbose':
       return value

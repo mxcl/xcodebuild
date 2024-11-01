@@ -45,7 +45,7 @@ async function main() {
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
   const destination = await getDestination(selected, platform, platformVersion)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
-  const xcpretty = verbosity() == 'xcpretty'
+  const currentVerbosity = verbosity()
   const workspace = core.getInput('workspace')
 
   core.info(`» Selected Xcode ${selected}`)
@@ -211,7 +211,7 @@ async function main() {
       if (arch) args = args.concat([`-arch=${arch}`])
       if (workspace) args = args.concat(['-workspace', workspace])
       if (identity) args = args.concat(identity)
-      if (verbosity() == 'quiet') args.push('-quiet')
+      if (currentVerbosity == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
       if (apiKey) args = args.concat(apiKey)
 
@@ -238,7 +238,7 @@ async function main() {
 
       if (action) args.push(action)
 
-      await xcodebuildX(args, xcpretty)
+      await xcodebuildX(args, currentVerbosity)
     })
   }
 

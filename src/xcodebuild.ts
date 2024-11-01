@@ -1,14 +1,17 @@
 import { spawn } from 'child_process'
 import * as core from '@actions/core'
+import { Verbosity } from './lib'
 
 type SpawnResult = number | NodeJS.Signals | null
 
 export default async function xcodebuild(
   args: string[],
-  xcpretty: boolean
+  verbosity: Verbosity
 ): Promise<void> {
+  const needsPipe = verbosity === 'xcpretty' || verbosity === 'xcbeautify'
+
   const xcodebuild = spawn('xcodebuild', args, {
-    stdio: ['inherit', xcpretty ? 'pipe' : 'inherit', 'inherit'],
+    stdio: ['inherit', needsPipe ? 'pipe' : 'inherit', 'inherit'],
   })
 
   let promise = new Promise<SpawnResult>((fulfill, reject) => {
@@ -16,18 +19,18 @@ export default async function xcodebuild(
     xcodebuild.on('exit', (status, signal) => fulfill(status ?? signal))
   })
 
-  if (xcpretty) {
-    const xcpretty = spawn('xcpretty', {
+  if (needsPipe) {
+    const processResponse = spawn(verbosity, {
       stdio: ['pipe', process.stdout, 'inherit'],
     })
 
-    xcodebuild.stdout?.pipe(xcpretty.stdin)
+    xcodebuild.stdout?.pipe(processResponse.stdin)
 
     promise = promise.then(
       (status0) =>
         new Promise<SpawnResult>((fulfill, reject) => {
-          xcpretty.on('error', reject)
-          xcpretty.on('exit', (status, signal) =>
+          processResponse.on('error', reject)
+          processResponse.on('exit', (status, signal) =>
             fulfill(status0 ?? status ?? signal)
           )
         })

@@ -201,6 +201,7 @@ jobs:
       matrix:
         verbosity:
           - xcpretty
+          - xcbeautify
           - quiet
           - verbose
     steps:
