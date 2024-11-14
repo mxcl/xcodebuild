@@ -268,7 +268,7 @@ jobs:
             platform: iOS
             platform-version: ^16
             os: macos-14
-            xcode: ^14
+            xcode: ^13
           - platform: mac-catalyst
             xcode: ^13
             codecov: false
