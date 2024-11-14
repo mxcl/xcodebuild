@@ -267,8 +267,8 @@ jobs:
           - job-name-sufix: ', platform-version ^16'
             platform: iOS
             platform-version: ^16
-            os: macos-14
-            xcode: ^13
+            os: macos-13
+            xcode: ^14
           - platform: mac-catalyst
             xcode: ^13
             codecov: false
