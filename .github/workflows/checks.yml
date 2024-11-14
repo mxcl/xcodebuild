@@ -228,6 +228,8 @@ jobs:
             os: macos-14
           - swift: ~5.9
             os: macos-14
+          - swift: ~5.10
+            os: macos-14
     steps:
       - uses: actions/checkout@v4
       - uses: ./
