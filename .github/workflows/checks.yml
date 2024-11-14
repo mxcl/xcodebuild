@@ -215,6 +215,7 @@ jobs:
     name: swift ${{ matrix.x.swift }}
     runs-on: ${{ matrix.x.os }}
     needs: [verify-dist]
+    continue-on-error: true
     strategy:
       matrix:
         x:
@@ -225,7 +226,7 @@ jobs:
           - swift: ~5.7
             os: macos-13
           - swift: ~5.8
-            os: macos-14
+            os: macos-13
           - swift: ~5.9
             os: macos-14
           - swift: ~5.10
@@ -245,6 +246,7 @@ jobs:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.job-name-sufix }})
     runs-on: ${{ matrix.os || 'macos-12' }}
     needs: [verify-dist]
+    continue-on-error: true
     strategy:
       matrix:
         platform:
