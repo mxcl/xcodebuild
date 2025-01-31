@@ -177,7 +177,7 @@ jobs:
           action: ${{ matrix.action }}
 
   configurations:
-    runs-on: macos-12
+    runs-on: macos-latest
     needs: [verify-dist]
     strategy:
       matrix:
@@ -220,9 +220,9 @@ jobs:
       matrix:
         x:
           - swift: ~5.5
-            os: macos-12
+            os: macos-13
           - swift: ~5.6
-            os: macos-12
+            os: macos-13
           - swift: ~5.7
             os: macos-13
           - swift: ~5.8
@@ -244,7 +244,7 @@ jobs:
 
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.job-name-sufix }})
-    runs-on: ${{ matrix.os || 'macos-12' }}
+    runs-on: ${{ matrix.os || 'macos-13' }}
     needs: [verify-dist]
     continue-on-error: true
     strategy:
@@ -302,7 +302,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - macos-12
+          - macos-13
         platform:
           - watchOS
         xcode:
@@ -327,7 +327,7 @@ jobs:
 
   verify-codecov:
     name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
-    runs-on: macos-12
+    runs-on: macos-13
     needs: [verify-dist]
     strategy:
       matrix:
