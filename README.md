@@ -359,7 +359,7 @@ This action does not support Windows.
 
 ## Contributing
 
-1. Run `npm install`
+1. Run `npm ci`
 1. Edit the various `.ts` files
 1. Run `npm run prepare`
 1. Correct any lint issues with `npm run format` or in your editor
