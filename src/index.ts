@@ -330,7 +330,7 @@ async function uploadLogs() {
         .substr(0, 6)
 
       const base = path.basename(xcresult, '.xcresult')
-      const name = `${base}#${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
+      const name = `${base}-${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
       await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
     }
   })
