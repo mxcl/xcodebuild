@@ -17,7 +17,7 @@ import {
 } from './lib'
 import type { Arch, Platform } from './lib'
 import xcodebuildX from './xcodebuild'
-import * as artifact from '@actions/artifact'
+import { DefaultArtifactClient } from '@actions/artifact'
 import * as core from '@actions/core'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -321,6 +321,8 @@ async function uploadLogs() {
       core.warning('strange… no `.xcresult` bundles found')
     }
 
+    const artifact = new DefaultArtifactClient()
+
     for (const xcresult of xcresults) {
       // random part because GitHub doesn’t yet expose any kind of per-job, per-matrix ID
       // https://github.community/t/add-build-number/16149/17
@@ -331,7 +333,7 @@ async function uploadLogs() {
 
       const base = path.basename(xcresult, '.xcresult')
       const name = `${base}-${process.env.GITHUB_RUN_NUMBER}.${nonce}.xcresult`
-      await artifact.create().uploadArtifact(name, getFiles(xcresult), '.')
+      await artifact.uploadArtifact(name, getFiles(xcresult), '.')
     }
   })
 }
