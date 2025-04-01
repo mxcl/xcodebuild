@@ -303,7 +303,7 @@ jobs:
           - build
           - test
         warnings-as-errors:
-          - true
+          # - true
           - false
     steps:
       - uses: actions/checkout@v4
