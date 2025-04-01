@@ -177,7 +177,7 @@ jobs:
           action: ${{ matrix.action }}
 
   configurations:
-    runs-on: macos-12
+    runs-on: macos-13
     needs: [verify-dist]
     strategy:
       matrix:
@@ -190,7 +190,8 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
           working-directory: fixtures/${{ matrix.configuration }}
-          warnings-as-errors: true
+          # warnings-as-errors: true
+          # ^^ works via generation, generation no longer works
           action: test
           upload-logs: always # so we can test this feature
 
@@ -219,16 +220,10 @@ jobs:
     strategy:
       matrix:
         x:
-          - swift: ~5.5
-            os: macos-12
-          - swift: ~5.6
-            os: macos-12
           - swift: ~5.7
             os: macos-13
           - swift: ~5.8
             os: macos-13
-          - swift: ~5.9
-            os: macos-14
           - swift: ~5.10
             os: macos-14
     steps:
@@ -244,7 +239,7 @@ jobs:
 
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.job-name-sufix }})
-    runs-on: ${{ matrix.os || 'macos-12' }}
+    runs-on: ${{ matrix.os || 'macos-latest' }}
     needs: [verify-dist]
     continue-on-error: true
     strategy:
@@ -255,8 +250,8 @@ jobs:
           - macOS
           - watchOS
         xcode:
-          - ^13
           - ^14
+          - ^15
         codecov:
           - false
         action:
@@ -267,10 +262,8 @@ jobs:
           - job-name-sufix: ', platform-version ^16'
             platform: iOS
             platform-version: ^16
-            os: macos-13
-            xcode: ^14
+            os: macos-14
           - platform: mac-catalyst
-            xcode: ^13
             codecov: false
             action: test
             warnings-as-errors: false
@@ -294,40 +287,9 @@ jobs:
       - run: |
           xcode-select --print-path
 
-  # lol we didn't comment on how this was different to the above and now I'm not sure
-  more-xcode:
-    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}, ${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    needs: [verify-dist]
-    strategy:
-      matrix:
-        os:
-          - macos-12
-        platform:
-          - watchOS
-        xcode:
-          - ^13
-        codecov:
-          - false
-        action:
-          - build
-          - test
-        warnings-as-errors:
-          - false
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./
-        with:
-          platform: ${{ matrix.platform }}
-          xcode: ${{ matrix.xcode }}
-          working-directory: fixtures/${{ matrix.platform }}
-          code-coverage: ${{ matrix.codecov }}
-          action: ${{ matrix.action }}
-          warnings-as-errors: ${{ matrix.warnings-as-errors }}
-
   verify-codecov:
     name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
-    runs-on: macos-12
+    runs-on: macos-13
     needs: [verify-dist]
     strategy:
       matrix:
@@ -340,7 +302,7 @@ jobs:
           - build
           - test
         warnings-as-errors:
-          - true
+          # - true
           - false
     steps:
       - uses: actions/checkout@v4

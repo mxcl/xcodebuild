@@ -8,13 +8,19 @@ import semver, { Range } from 'semver'
 import type { SemVer } from 'semver'
 
 async function mdls(path: string): Promise<SemVer | undefined> {
-  const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
-  if (core.getInput('verbosity') == 'verbose') {
-    // in verbose mode all commands and outputs are printed
-    // and mdls in `raw` mode does not terminate its lines
-    process.stdout.write('\n')
+  try {
+    const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
+    if (core.getInput('verbosity') == 'verbose') {
+      // in verbose mode all commands and outputs are printed
+      // and mdls in `raw` mode does not terminate its lines
+      process.stdout.write('\n')
+    }
+    return semver.coerce(v) ?? undefined
+  } catch (e) {
+    const match = path.match(/Xcode_(.*)\.app/)
+    if (!match?.[1]) throw e
+    return semver.coerce(match[1]) ?? undefined
   }
-  return semver.coerce(v) ?? undefined
 }
 
 async function xcodes(): Promise<[string, SemVer][]> {
