@@ -9,12 +9,12 @@
     "@actions/artifact": "^2.0.0",
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
-    "semver": "^7.3.5"
+    "semver": "^7.7.1"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.12.8",
-    "@types/semver": "^7.3.9",
+    "@types/semver": "^7.7.0",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "@vercel/ncc": "^0.36.1",
