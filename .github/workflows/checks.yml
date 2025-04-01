@@ -224,8 +224,6 @@ jobs:
             os: macos-13
           - swift: ~5.8
             os: macos-13
-          - swift: ~5.9
-            os: macos-14
           - swift: ~5.10
             os: macos-14
     steps:
@@ -241,7 +239,7 @@ jobs:
 
   xcode:
     name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.job-name-sufix }})
-    runs-on: ${{ matrix.os || 'macos-13' }}
+    runs-on: ${{ matrix.os || 'macos-latest' }}
     needs: [verify-dist]
     continue-on-error: true
     strategy:
@@ -264,6 +262,7 @@ jobs:
           - job-name-sufix: ', platform-version ^16'
             platform: iOS
             platform-version: ^16
+            os: macos-14
           - platform: mac-catalyst
             codecov: false
             action: test
