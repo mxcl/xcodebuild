@@ -177,7 +177,7 @@ jobs:
           action: ${{ matrix.action }}
 
   configurations:
-    runs-on: macos-13
+    runs-on: macos-latest
     needs: [verify-dist]
     strategy:
       matrix:
@@ -238,8 +238,8 @@ jobs:
           requires: ${{ matrix.x.swift }}
 
   xcode:
-    name: ${{ matrix.platform }} (${{ matrix.action }}, ${{ matrix.xcode }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.job-name-sufix }})
-    runs-on: ${{ matrix.os || 'macos-latest' }}
+    name: ${{ matrix.platform }} (${{ matrix.action }} ${{ matrix.xcode }} ${{ matrix.codecov && 'cc' || ''}}${{ matrix.job-name-sufix }})
+    runs-on: macos-latest
     needs: [verify-dist]
     continue-on-error: true
     strategy:
@@ -250,8 +250,7 @@ jobs:
           - macOS
           - watchOS
         xcode:
-          - ^14
-          - ^15
+          - ^16
         codecov:
           - false
         action:
@@ -259,20 +258,13 @@ jobs:
         warnings-as-errors:
           - false
         include:
-          - job-name-sufix: ', platform-version ^16'
+          - job-name-sufix: ' platform-version ^17'
             platform: iOS
-            platform-version: ^16
-            os: macos-14
+            platform-version: ^17
           - platform: mac-catalyst
             codecov: false
-            action: test
-            warnings-as-errors: false
           - platform: visionOS
-            os: macos-14
-            xcode: ^15
             codecov: false
-            action: test
-            warnings-as-errors: false
     steps:
       - uses: actions/checkout@v4
       - uses: ./
@@ -283,13 +275,13 @@ jobs:
           working-directory: fixtures/${{ matrix.platform }}
           code-coverage: ${{ matrix.codecov }}
           action: ${{ matrix.action }}
-          warnings-as-errors: ${{ matrix.warnings-as-errors }}
+          warnings-as-errors: ${{ matrix.warnings-as-errors || 'false' }}
       - run: |
           xcode-select --print-path
 
   verify-codecov:
-    name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}${{ matrix.warnings-as-errors && ', warnings-as-errors' || ''}})
-    runs-on: macos-13
+    name: ${{ matrix.platform }} (${{ matrix.action }}${{ matrix.codecov && ', cc' || ''}}
+    runs-on: macos-latest
     needs: [verify-dist]
     strategy:
       matrix:
@@ -301,9 +293,6 @@ jobs:
         action:
           - build
           - test
-        warnings-as-errors:
-          # - true
-          - false
     steps:
       - uses: actions/checkout@v4
       - uses: ./
@@ -312,7 +301,6 @@ jobs:
           working-directory: fixtures/${{ matrix.platform }}
           code-coverage: ${{ matrix.codecov }}
           action: ${{ matrix.action }}
-          warnings-as-errors: ${{ matrix.warnings-as-errors }}
 
   verify-dot-swift-version:
     name: .swift-version

@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import semver, { Range } from 'semver'
 import type { SemVer } from 'semver'
 
-async function mdls(path: string): Promise<SemVer | undefined> {
+async function mdls(path: string): Promise<SemVer | undefined | null> {
   try {
     const v = await exec('mdls', ['-raw', '-name', 'kMDItemVersion', path])
     if (core.getInput('verbosity') == 'verbose') {
@@ -18,15 +18,30 @@ async function mdls(path: string): Promise<SemVer | undefined> {
     return semver.coerce(v) ?? undefined
   } catch (e) {
     const match = path.match(/Xcode_(.*)\.app/)
-    if (!match?.[1]) throw e
-    return semver.coerce(match[1]) ?? undefined
+    if (match?.[1]) {
+      return semver.coerce(match[1])
+    }
   }
 }
 
 async function xcodes(): Promise<[string, SemVer][]> {
-  const paths = (
-    await exec('mdfind', ['kMDItemCFBundleIdentifier = com.apple.dt.Xcode'])
-  ).split('\n')
+  const paths = await (async () => {
+    const output = await exec('mdfind', [
+      'kMDItemCFBundleIdentifier = com.apple.dt.Xcode',
+    ]).catch(() => '')
+    const rv = output
+      .split('\n')
+      .map((path) => path.trim())
+      .filter((x) => x)
+    if (rv.length == 0) {
+      for (const entry of fs.readdirSync('/Applications')) {
+        if (!/Xcode.*\.app$/.test(entry)) continue
+        rv.push(path.join('/Applications', entry))
+      }
+    }
+    return rv
+  })()
+
   const rv: [string, SemVer][] = []
   for (const path of paths) {
     if (!path.trim()) continue
@@ -35,6 +50,7 @@ async function xcodes(): Promise<[string, SemVer][]> {
       rv.push([path, v])
     }
   }
+
   return rv
 }
 
@@ -96,7 +112,12 @@ export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
       .sort((a, b) => semver.compare(a[1], b[1]))
       .pop()
 
-    if (!rv3) throw new Error(`No Xcode with Swift ~> ${range}`)
+    if (!rv3)
+      throw new Error(
+        `No Xcode with Swift ~> ${range} (Xcodes: ${rv1.join(
+          ','
+        )} (Swifts: ${rv2.join(',')})`
+      )
 
     core.info(`» Selected Swift ${rv3[2]}`)
 
