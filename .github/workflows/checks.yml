@@ -190,7 +190,8 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
           working-directory: fixtures/${{ matrix.configuration }}
-          warnings-as-errors: true
+        # warnings-as-errors: true
+        # ^^ works via generation, generation no longer works
           action: test
           upload-logs: always # so we can test this feature
 
@@ -263,9 +264,7 @@ jobs:
           - job-name-sufix: ', platform-version ^16'
             platform: iOS
             platform-version: ^16
-            xcode: '>=13'
           - platform: mac-catalyst
-            xcode: '>=13'
             codecov: false
             action: test
             warnings-as-errors: false
