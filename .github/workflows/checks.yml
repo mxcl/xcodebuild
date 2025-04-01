@@ -190,8 +190,8 @@ jobs:
         with:
           configuration: ${{ matrix.configuration }}
           working-directory: fixtures/${{ matrix.configuration }}
-        # warnings-as-errors: true
-        # ^^ works via generation, generation no longer works
+          # warnings-as-errors: true
+          # ^^ works via generation, generation no longer works
           action: test
           upload-logs: always # so we can test this feature
 
