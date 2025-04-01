@@ -251,8 +251,8 @@ jobs:
           - macOS
           - watchOS
         xcode:
-          - ^13
           - ^14
+          - ^15
         codecov:
           - false
         action:
@@ -263,9 +263,9 @@ jobs:
           - job-name-sufix: ', platform-version ^16'
             platform: iOS
             platform-version: ^16
-            xcode: ^14
+            xcode: '>=13'
           - platform: mac-catalyst
-            xcode: ^13
+            xcode: '>=13'
             codecov: false
             action: test
             warnings-as-errors: false
