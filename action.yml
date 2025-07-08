@@ -38,6 +38,11 @@ inputs:
         does without an action specified (usually `build`)
     required: false
     default: test
+  derived-data-path:
+    description: |
+      Path to which `xcodebuild` will write its derived data.
+      Leave unset and `xcodebuild` decides itself.
+    required: false
   code-coverage:
     description: Enables code coverage
     required: false
