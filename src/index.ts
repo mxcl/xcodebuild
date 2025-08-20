@@ -225,11 +225,22 @@ async function main() {
           if (warningsAsErrors) args.push(warningsAsErrorsFlags)
           break
         case 'test':
-        case 'build-for-testing':
+        case 'build-for-testing': {
           if (core.getBooleanInput('code-coverage')) {
             args = args.concat(['-enableCodeCoverage', 'YES'])
           }
+          // Optional test timeouts support
+          const testTimeouts = core.getInput('test-timeouts')
+          if (testTimeouts) {
+            args = args.concat([
+              '-default-test-execution-time-allowance',
+              testTimeouts,
+              '-test-timeouts-enabled',
+              'YES',
+            ])
+          }
           break
+        }
       }
 
       if (core.getBooleanInput('trust-plugins')) {
