@@ -28,6 +28,12 @@ inputs:
       Either `arm64` `x86_64 `i386`
       Leave unset and `xcodebuild` decides itself.
     required: false
+  destination:
+    description: |
+      Simulator device to target. Provide a device name (eg. `iPhone 15 Pro (16.4)`) or a
+      device UDID to override automatic selection. Supported for iOS, tvOS,
+      watchOS and visionOS platforms.
+    required: false
   action:
     description: |
       * The most common actions are `test`, `build`.

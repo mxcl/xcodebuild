@@ -43,7 +43,13 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
-  const destination = await getDestination(selected, platform, platformVersion)
+  const explicitDestination = core.getInput('destination')
+  const destination = await getDestination(
+    selected,
+    platform,
+    platformVersion,
+    explicitDestination
+  )
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const currentVerbosity = verbosity()
   const workspace = core.getInput('workspace')

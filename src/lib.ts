@@ -166,13 +166,14 @@ export async function xcselect(xcode?: Range, swift?: Range): Promise<SemVer> {
 
 interface Devices {
   devices: {
-    [key: string]: [
-      {
-        udid: string
-        name: string
-      }
-    ]
+    [key: string]: SimulatorDevice[]
   }
+}
+
+interface SimulatorDevice {
+  udid: string
+  name: string
+  isAvailable?: boolean
 }
 
 type DeviceType = 'watchOS' | 'tvOS' | 'iOS' | 'xrOS'
@@ -180,6 +181,7 @@ type Destination = {
   id: string
   name: string | undefined
   version: SemVer
+  type: DeviceType
 }
 
 interface Schemes {
@@ -225,10 +227,31 @@ function parseJSON<T>(input: string): T {
   }
 }
 
-async function destination(
-  deviceType: DeviceType,
-  version?: Range
-): Promise<Destination | undefined> {
+async function availableDestinations(): Promise<Destination[]> {
+  const devices = await fetchSimulators()
+  const results: Destination[] = []
+
+  for (const identifier in devices) {
+    const [type, version] = parseRuntimeIdentifier(identifier)
+    if (!type || !version) continue
+
+    for (const device of devices[identifier] ?? []) {
+      if (!device) continue
+      if (device.isAvailable === false) continue
+
+      results.push({
+        id: device.udid,
+        name: device.name,
+        version,
+        type,
+      })
+    }
+  }
+
+  return results
+}
+
+async function fetchSimulators(): Promise<Devices['devices']> {
   const out = await exec('xcrun', [
     'simctl',
     'list',
@@ -236,30 +259,136 @@ async function destination(
     'devices',
     'available',
   ])
-  const devices = parseJSON<Devices>(out).devices
+  return parseJSON<Devices>(out).devices
+}
 
-  // best match
-  let bm: Destination | undefined
-  for (const opaqueIdentifier in devices) {
-    const device = (devices[opaqueIdentifier] ?? [])[0]
-    if (!device) continue
-    const [type, v] = parse(opaqueIdentifier)
-    if (
-      v &&
-      type === deviceType &&
-      (!version || version.test(v)) &&
-      (!bm || semver.lt(bm.version, v))
-    ) {
-      bm = { id: device.udid, name: device.name, version: v }
+function parseRuntimeIdentifier(
+  key: string
+): [DeviceType | undefined, SemVer | undefined] {
+  const [type, ...vv] = (key.split('.').pop() ?? '').split('-')
+  const version = semver.coerce(vv.join('.')) ?? undefined
+  return [toDeviceType(type), version]
+}
+
+function toDeviceType(type: string | undefined): DeviceType | undefined {
+  switch (type) {
+    case 'iOS':
+    case 'tvOS':
+    case 'watchOS':
+    case 'xrOS':
+      return type
+    default:
+      return undefined
+  }
+}
+
+async function destination(
+  deviceType: DeviceType,
+  version?: Range
+): Promise<Destination | undefined> {
+  const devices = await fetchSimulators()
+
+  let bestMatch: Destination | undefined
+
+  for (const identifier in devices) {
+    const [type, runtimeVersion] = parseRuntimeIdentifier(identifier)
+    if (!type || type !== deviceType) continue
+    if (!runtimeVersion) continue
+    if (version && !version.test(runtimeVersion)) continue
+
+    const candidates = (devices[identifier] ?? []).filter(
+      (device) => device && device.isAvailable !== false
+    )
+    if (candidates.length === 0) continue
+
+    const device = candidates[0]
+    const candidate: Destination = {
+      id: device.udid,
+      name: device.name,
+      version: runtimeVersion,
+      type,
+    }
+
+    if (!bestMatch || semver.lt(bestMatch.version, runtimeVersion)) {
+      bestMatch = candidate
     }
   }
 
-  return bm
+  return bestMatch
+}
 
-  function parse(key: string): [DeviceType, SemVer?] {
-    const [type, ...vv] = (key.split('.').pop() ?? '').split('-')
-    const v = semver.coerce(vv.join('.'))
-    return [type as DeviceType, v ?? undefined]
+async function resolveManualDestination(
+  input: string,
+  platform?: Platform,
+  platformVersion?: Range
+): Promise<Destination | undefined> {
+  const destinations = await availableDestinations()
+  const trimmed = input.trim()
+  if (!trimmed) return undefined
+
+  const allowedTypes = platformToDeviceTypes(platform)
+  const matchesFilters = (dest: Destination) => {
+    if (allowedTypes && !allowedTypes.includes(dest.type)) return false
+    if (platformVersion && !platformVersion.test(dest.version)) return false
+    return true
+  }
+
+  if (looksLikeUDID(trimmed)) {
+    const normalized = trimmed.toLowerCase()
+    return destinations.find(
+      (dest) => dest.id.toLowerCase() === normalized && matchesFilters(dest)
+    )
+  }
+
+  const { name, version } = parseManualDestination(trimmed)
+
+  const matches = destinations.filter((dest) => {
+    if (!dest.name) return false
+    if (dest.name.toLowerCase() !== name.toLowerCase()) return false
+    if (!matchesFilters(dest)) return false
+    if (version && !semver.eq(dest.version, version)) return false
+    return true
+  })
+
+  if (matches.length === 0) return undefined
+
+  matches.sort((a, b) => semver.compare(a.version, b.version))
+  return matches.pop()
+}
+
+function parseManualDestination(input: string): {
+  name: string
+  version?: SemVer
+} {
+  const match = input.match(/^(.*?)(?:\s*\((.+)\))?$/)
+  const name = (match?.[1] ?? input).trim()
+  const versionRaw = match?.[2]?.trim()
+  const version = versionRaw
+    ? semver.coerce(versionRaw) ?? undefined
+    : undefined
+  return { name, version }
+}
+
+function looksLikeUDID(value: string): boolean {
+  const normalized = value.trim()
+  return (
+    /^[0-9A-Fa-f-]{32,36}$/.test(normalized) &&
+    normalized.replace(/-/g, '').length >= 25
+  )
+}
+
+function platformToDeviceTypes(platform?: Platform): DeviceType[] | undefined {
+  switch (platform) {
+    case 'iOS':
+      return ['iOS']
+    case 'tvOS':
+      return ['tvOS']
+    case 'watchOS':
+      return ['watchOS']
+    case 'visionOS':
+      return ['xrOS']
+    default:
+      return undefined
   }
 }
 
@@ -364,8 +493,34 @@ export function actionIsTestable(action?: string): boolean {
 export async function getDestination(
   xcodeVersion: SemVer,
   platform?: Platform,
-  platformVersion?: Range
+  platformVersion?: Range,
+  manualDestination?: string
 ): Promise<string[]> {
+  const trimmedDestination = manualDestination?.trim()
+
+  if (trimmedDestination) {
+    if (platform === 'macOS' || platform === 'mac-catalyst') {
+      throw new Error(
+        '`destination` is only supported for simulator-based platforms.'
+      )
+    }
+
+    const dest = await resolveManualDestination(
+      trimmedDestination,
+      platform,
+      platformVersion
+    )
+
+    if (!dest) {
+      throw new Error(
+        `Device not found for destination '${trimmedDestination}'.`
+      )
+    }
+
+    core.info(`Selected device: ${dest.name ?? dest.id} (${dest.version})`)
+    return ['-destination', `id=${dest.id}`]
+  }
+
   switch (platform) {
     case 'iOS':
     case 'tvOS':
