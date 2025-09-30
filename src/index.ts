@@ -43,6 +43,11 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
+  const parallelTestingInput = core.getInput('parallel-testing')
+  const parallelTesting =
+    parallelTestingInput === ''
+      ? undefined
+      : core.getBooleanInput('parallel-testing', { trimWhitespace: true })
   const destination = await getDestination(selected, platform, platformVersion)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const currentVerbosity = verbosity()
@@ -225,11 +230,28 @@ async function main() {
           if (warningsAsErrors) args.push(warningsAsErrorsFlags)
           break
         case 'test':
-        case 'build-for-testing':
+        case 'build-for-testing': {
           if (core.getBooleanInput('code-coverage')) {
             args = args.concat(['-enableCodeCoverage', 'YES'])
           }
+          // Optional test timeouts support
+          const testTimeouts = core.getInput('test-timeouts')
+          if (testTimeouts) {
+            args = args.concat([
+              '-default-test-execution-time-allowance',
+              testTimeouts,
+              '-test-timeouts-enabled',
+              'YES',
+            ])
+          }
+          if (parallelTesting !== undefined) {
+            args = args.concat([
+              '-parallel-testing-enabled',
+              parallelTesting ? 'YES' : 'NO',
+            ])
+          }
           break
+        }
       }
 
       if (core.getBooleanInput('trust-plugins')) {
