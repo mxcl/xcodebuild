@@ -142,6 +142,11 @@ inputs:
       `-test-timeouts-enabled YES` to xcodebuild for test actions.
       (60 seconds is the minimum value.
     required: false
+  parallel-testing:
+    description: |
+      When set, forwards `-parallel-testing-enabled <YES|NO>` to xcodebuild.
+      Use `true` to force enable parallel testing or `false` to disable it.
+    required: false
 runs:
   using: 'node20'
   main: 'dist/index.js'

@@ -43,6 +43,11 @@ async function main() {
   const action = getAction(selected, platform)
   const configuration = getConfiguration()
   const warningsAsErrors = core.getBooleanInput('warnings-as-errors')
+  const parallelTestingInput = core.getInput('parallel-testing')
+  const parallelTesting =
+    parallelTestingInput === ''
+      ? undefined
+      : core.getBooleanInput('parallel-testing', { trimWhitespace: true })
   const destination = await getDestination(selected, platform, platformVersion)
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const currentVerbosity = verbosity()
@@ -237,6 +242,12 @@ async function main() {
               testTimeouts,
               '-test-timeouts-enabled',
               'YES',
+            ])
+          }
+          if (parallelTesting !== undefined) {
+            args = args.concat([
+              '-parallel-testing-enabled',
+              parallelTesting ? 'YES' : 'NO',
             ])
           }
           break

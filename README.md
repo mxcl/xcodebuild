@@ -66,6 +66,7 @@ jobs:
           action: build # default = `test`
           code-coverage: true # default = `false`
           test-timeouts: 120 # optional; seconds; enables test timeouts
+          parallel-testing: true # optional; forwards -parallel-testing-enabled YES/NO
           warnings-as-errors: true # default = `false`
           configuration: release # no default, ie. `xcodebuild` decides itself
 ```
