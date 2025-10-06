@@ -21,6 +21,6 @@
     "eslint": "^8.9.0",
     "eslint-config-prettier": "^10.1.1",
     "prettier": "^2.8.6",
-    "typescript": "^5.0.2"
+    "typescript": "^5.9.3"
   }
 }
