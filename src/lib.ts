@@ -333,6 +333,7 @@ export function getConfiguration(): string {
 export type Platform =
   | 'watchOS'
   | 'iOS'
+  | 'iOS-simulator'
   | 'tvOS'
   | 'macOS'
   | 'mac-catalyst'
@@ -386,6 +387,8 @@ export async function getDestination(
       return ['-destination', `platform=macOS`]
     case 'mac-catalyst':
       return ['-destination', `platform=macOS,variant=Mac Catalyst`]
+    case 'iOS-simulator':
+      return ['-destination', `generic/platform=iOS Simulator`]
     case undefined:
       if (semver.gte(xcodeVersion, '13.0.0')) {
         //FIXME should parse output from xcodebuild -showdestinations
