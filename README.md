@@ -65,6 +65,7 @@ jobs:
           platform: ${{ matrix.platform }}
           action: build # default = `test`
           code-coverage: true # default = `false`
+          test-timeouts: 120 # optional; seconds; enables test timeouts
           warnings-as-errors: true # default = `false`
           configuration: release # no default, ie. `xcodebuild` decides itself
 ```
