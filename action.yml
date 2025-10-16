@@ -14,7 +14,7 @@ inputs:
     required: false
   platform:
     description: |
-      Either `iOS`, `tvOS`, `macOS`, `watchOS`, `visionOS` or (more rarely)
+      Either `iOS`, `iOS-simulator`, `tvOS`, `macOS`, `watchOS`, `visionOS` or (more rarely)
       `mac-catalyst`
       Leave unset and `xcodebuild` decides itself.
     required: false
@@ -38,6 +38,11 @@ inputs:
         does without an action specified (usually `build`)
     required: false
     default: test
+  archive-path:
+    description: |
+      The path in which to store the resulting archive when running archive builds
+      Leave unset to use the default path
+    required: false
   code-coverage:
     description: Enables code coverage
     required: false
