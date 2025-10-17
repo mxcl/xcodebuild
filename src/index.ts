@@ -47,6 +47,7 @@ async function main() {
   const identity = getIdentity(core.getInput('code-sign-identity'), platform)
   const currentVerbosity = verbosity()
   const workspace = core.getInput('workspace')
+  const derivedDataPath = core.getInput('derived-data-path')
 
   core.info(`» Selected Xcode ${selected}`)
 
@@ -60,7 +61,7 @@ async function main() {
   await configureKeychain()
   await configureProvisioningProfiles()
 
-  await build(await getScheme(workspace), workspace, arch)
+  await build(await getScheme(workspace), workspace, arch, derivedDataPath)
 
   if (core.getInput('upload-logs') == 'always') {
     await uploadLogs()
@@ -187,11 +188,16 @@ async function main() {
     await createProvisioningProfiles(mobileProfiles, profiles)
   }
 
-  async function build(scheme?: string, workspace?: string, arch?: Arch) {
+  async function build(
+    scheme?: string,
+    workspace?: string,
+    arch?: Arch,
+    derivedDataPath?: string
+  ) {
     if (warningsAsErrors && actionIsTestable(action)) {
-      await xcodebuild('build', scheme, workspace, arch)
+      await xcodebuild('build', scheme, workspace, arch, derivedDataPath)
     }
-    await xcodebuild(action, scheme, workspace, arch)
+    await xcodebuild(action, scheme, workspace, arch, derivedDataPath)
   }
 
   //// helper funcs
@@ -200,7 +206,8 @@ async function main() {
     action?: string,
     scheme?: string,
     workspace?: string,
-    arch?: Arch
+    arch?: Arch,
+    derivedDataPath?: string
   ) {
     if (action === 'none') return
 
@@ -210,6 +217,9 @@ async function main() {
       if (scheme) args = args.concat(['-scheme', scheme])
       if (arch) args = args.concat([`-arch=${arch}`])
       if (workspace) args = args.concat(['-workspace', workspace])
+      if (derivedDataPath) {
+        args = args.concat(['-derivedDataPath', derivedDataPath])
+      }
       if (identity) args = args.concat(identity)
       if (currentVerbosity == 'quiet') args.push('-quiet')
       if (configuration) args = args.concat(['-configuration', configuration])
