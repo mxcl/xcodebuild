@@ -65,6 +65,7 @@ jobs:
           platform: ${{ matrix.platform }}
           action: build # default = `test`
           code-coverage: true # default = `false`
+          sanitizer: thread # options: `thread`, `address` (only one at a time)
           warnings-as-errors: true # default = `false`
           configuration: release # no default, ie. `xcodebuild` decides itself
 ```
@@ -186,9 +187,37 @@ opened in Xcode:
 
 ![img]
 
-You’ll even get your coverage report!
+You'll even get your coverage report!
 
 > Note this feature requires Xcode >= 11
+
+## Sanitizers
+
+You can enable sanitizers to help detect bugs during testing. Only one sanitizer can be enabled at a time.
+
+### Thread Sanitizer
+
+Thread Sanitizer (TSan) detects data races and other threading issues:
+
+```yaml
+- uses: mxcl/xcodebuild@v3
+  with:
+    action: test
+    sanitizer: thread
+```
+
+### Address Sanitizer
+
+Address Sanitizer (ASan) detects memory corruption issues like buffer overflows and use-after-free:
+
+```yaml
+- uses: mxcl/xcodebuild@v3
+  with:
+    action: test
+    sanitizer: address
+```
+
+Sanitizers are only applied for `test` and `build-for-testing` actions.
 
 ## `.swift-version` File
 
