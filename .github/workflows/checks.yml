@@ -302,6 +302,26 @@ jobs:
           code-coverage: ${{ matrix.codecov }}
           action: ${{ matrix.action }}
 
+  verify-sanitizers:
+    name: ${{ matrix.platform }} ${{ matrix.sanitizer }}
+    runs-on: macos-latest
+    needs: [verify-dist]
+    strategy:
+      matrix:
+        platform:
+          - macOS
+        sanitizer:
+          - thread
+          - address
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          platform: ${{ matrix.platform }}
+          working-directory: fixtures/${{ matrix.platform }}
+          sanitizer: ${{ matrix.sanitizer }}
+          action: test
+
   verify-dot-swift-version:
     name: .swift-version
     runs-on: macos-14
