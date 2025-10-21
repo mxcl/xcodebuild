@@ -91,6 +91,22 @@ jobs:
           platform: ${{ matrix.platform }}
 ```
 
+When you need a specific simulator, supply `destination` with a device name or
+UDID. Device names support an optional OS version in parentheses, allowing you
+to stay resilient while targeting the right runtime:
+
+```yaml
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mxcl/xcodebuild@v3
+        with:
+          platform: iOS
+          destination: iPhone 15 Pro (17.4)
+```
+
 ```yaml
 jobs:
   build:
@@ -339,9 +355,10 @@ jobs:
 
 - We’re smart based on the selected Xcode version, for example we know watchOS
   cannot be tested prior to 12.5 and run xcodebuild with `build` instead
-- We figure out the the simulator destination for you automatically. Stop
+- We figure out the simulator destination for you automatically. Stop
   specifying fragile strings like `platform=iphonesimulator,os=14.5,name=iPhone 12`
-  that will break when Xcode updates next week.
+  that will break when Xcode updates next week. When you do need a specific
+  simulator, use the `destination` input with a device name or UDID.
 - You probably don’t need to specify project or scheme since we aren’t tedious
   if possible
 - `warnings-as-errors` is only applied to normal targets: not your tests
