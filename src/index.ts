@@ -231,11 +231,18 @@ async function main() {
           if (warningsAsErrors) args.push(warningsAsErrorsFlags)
           break
         case 'test':
-        case 'build-for-testing':
+        case 'build-for-testing': {
           if (core.getBooleanInput('code-coverage')) {
             args = args.concat(['-enableCodeCoverage', 'YES'])
           }
+          const sanitizer = core.getInput('sanitizer')
+          if (sanitizer === 'thread') {
+            args = args.concat(['-enableThreadSanitizer', 'YES'])
+          } else if (sanitizer === 'address') {
+            args = args.concat(['-enableAddressSanitizer', 'YES'])
+          }
           break
+        }
       }
 
       if (core.getBooleanInput('trust-plugins')) {

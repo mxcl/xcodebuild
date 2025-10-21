@@ -48,6 +48,13 @@ inputs:
     description: Enables code coverage
     required: false
     default: 'false'
+  sanitizer:
+    description: |
+      Enable a sanitizer for testing. Options: `thread`, `address`.
+      * `thread`: Thread Sanitizer (TSan) detects threading issues like data races
+      * `address`: Address Sanitizer (ASan) detects memory issues like buffer overflows
+      Only one sanitizer can be enabled at a time. Leave unset to disable.
+    required: false
   authentication-key-base64:
     description: |
       A Base64-encoded authentication key issued by App Store Connect. If
