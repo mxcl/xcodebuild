@@ -19,7 +19,7 @@
     "@typescript-eslint/parser": "^5.11.0",
     "@vercel/ncc": "^0.36.1",
     "eslint": "^8.9.0",
-    "eslint-config-prettier": "^10.1.1",
+    "eslint-config-prettier": "^10.1.8",
     "prettier": "^2.8.6",
     "typescript": "^5.0.2"
   }
